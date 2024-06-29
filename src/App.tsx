@@ -16,8 +16,8 @@ function App() {
   }, []);
 
   async function drawImageOnCanvas(imageData: Uint8Array) {
-    const canvas: HTMLCanvasElement = canvasRef.current;
-    const ctx = canvas.getContext("bitmaprenderer");
+    const canvas: HTMLCanvasElement | null = canvasRef.current;
+    const ctx = canvas!.getContext("bitmaprenderer");
     // 假设imageData是从后端接收到的Uint8Array
     const blob = new Blob([imageData], { type: "image/bmp" });
     const bitmap = await createImageBitmap(blob);
