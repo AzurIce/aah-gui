@@ -5,11 +5,11 @@ version = 3
 [[package]]
 name = "aah-core"
 version = "0.1.0"
-source = "git+https://github.com/AzurIce/azur-arknights-helper.git#702613bfcc5e8fb2905aa9a8bbcc6916fe7ea006"
+source = "git+https://github.com/AzurIce/azur-arknights-helper.git#6aecef14901d31c1c03dec6ec076abcd199acd95"
 dependencies = [
  "aah-cv",
  "color-print",
- "image 0.24.9",
+ "image 0.25.1",
  "imageproc",
  "log",
  "nalgebra 0.32.6",
@@ -29,7 +29,7 @@ dependencies = [
 [[package]]
 name = "aah-cv"
 version = "0.1.0"
-source = "git+https://github.com/AzurIce/azur-arknights-helper.git#702613bfcc5e8fb2905aa9a8bbcc6916fe7ea006"
+source = "git+https://github.com/AzurIce/azur-arknights-helper.git#6aecef14901d31c1c03dec6ec076abcd199acd95"
 dependencies = [
  "bytemuck",
  "csv",
@@ -38,7 +38,7 @@ dependencies = [
  "fftconvolve",
  "flume",
  "futures-intrusive",
- "image 0.24.9",
+ "image 0.25.1",
  "imageproc",
  "nalgebra 0.32.6",
  "ndarray",
@@ -2003,13 +2003,7 @@ dependencies = [
  "bytemuck",
  "byteorder",
  "color_quant",
- "exr",
- "gif",
- "jpeg-decoder",
  "num-traits",
- "png",
- "qoi",
- "tiff",
 ]
 
 [[package]]
@@ -2213,9 +2207,6 @@ name = "jpeg-decoder"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f5d4a7da358eff58addd2877a45865158f0d78c911d43a5784ceb7bbf52833b0"
-dependencies = [
- "rayon",
-]
 
 [[package]]
 name = "js-sys"
@@ -2346,7 +2337,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e310b3a6b5907f99202fcdb4960ff45b93735d7c7d96b760fcff8db2dc0e103d"
 dependencies = [
  "cfg-if",
- "windows-targets 0.48.5",
+ "windows-targets 0.52.5",
 ]
 
 [[package]]
