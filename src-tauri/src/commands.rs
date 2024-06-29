@@ -1,7 +1,7 @@
-use std::{io::Cursor, path::Path};
+use std::{io::Cursor, path::Path, time::Instant};
 
 use aah_core::AAH;
-use image::ImageFormat;
+use image::{ImageBuffer, ImageFormat};
 
 use crate::state::core_instance;
 
@@ -14,7 +14,22 @@ pub fn connect(serial: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn get_screen() -> Result<Vec<u8>, String> {
+pub fn update_screen() -> Result<(), String> {
+    let mut core = core_instance().lock().unwrap();
+    if core.is_none() {
+        return Err("No device connected".to_string());
+    }
+    let core = core.as_mut().unwrap();
+
+    core.update_screen()
+}
+
+#[tauri::command]
+pub fn get_screen(
+    windows: tauri::Window,
+    request: tauri::ipc::Request,
+) -> Result<tauri::ipc::Response, String> {
+    let start = Instant::now();
     let mut core = core_instance().lock().unwrap();
     if core.is_none() {
         return Err("No device connected".to_string());
@@ -27,7 +42,61 @@ pub fn get_screen() -> Result<Vec<u8>, String> {
     screen
         .write_to(&mut Cursor::new(&mut buf), ImageFormat::Bmp)
         .map_err(|e| format!("编码图像失败: {:?}", e))?;
+    // println!("elapsed {:?}", start.elapsed());
+    Ok(tauri::ipc::Response::new(buf))
+}
 
+#[tauri::command]
+pub fn get_image() -> Result<Vec<u8>, String> {
+    let imgx = 800;
+    let imgy = 800;
+
+    let scalex = 3.0 / imgx as f32;
+    let scaley = 3.0 / imgy as f32;
+
+    // Create a new ImgBuf with width: imgx and height: imgy
+    let mut imgbuf = ImageBuffer::new(imgx, imgy);
+
+    // Iterate over the coordinates and pixels of the image
+    for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
+        let r = (0.3 * x as f32) as u8;
+        let b = (0.3 * y as f32) as u8;
+        *pixel = image::Rgb([r, 0, b]);
+    }
+
+    // A redundant loop to demonstrate reading image data
+    for x in 0..imgx {
+        for y in 0..imgy {
+            let cx = y as f32 * scalex - 1.5;
+            let cy = x as f32 * scaley - 1.5;
+
+            let c = num_complex::Complex::new(-0.4, 0.6);
+            let mut z = num_complex::Complex::new(cx, cy);
+
+            let mut i = 0;
+            while i < 255 && z.norm() <= 2.0 {
+                z = z * z + c;
+                i += 1;
+            }
+
+            let pixel = imgbuf.get_pixel_mut(x, y);
+            let image::Rgb(data) = *pixel;
+            *pixel = image::Rgb([data[0], i as u8, data[2]]);
+        }
+    }
+
+    // 创建一个内存缓冲区，用于写入图像数据
+    let mut buf = Vec::new();
+
+    // 使用 Cursor 包装 buf，使其实现了 Seek trait
+    let mut cursor = Cursor::new(&mut buf);
+
+    // 将图像数据以 JPEG 格式写入到 buf 中
+    imgbuf
+        .write_to(&mut cursor, ImageFormat::Bmp)
+        .map_err(|e| format!("编码图像失败: {:?}", e))?;
+
+    // 将包含图像数据的 Vec<u8> 返回给前端
     Ok(buf)
 }
 
@@ -56,7 +125,7 @@ mod test {
         }
 
         // 调用 get_screen() 函数获取屏幕数据
-        let result1 = get_screen();
+        // let result1 = get_screen();
 
         // 这是个sb操作，保持注释就好
         // println!("{:?}", result1);
