@@ -1,8 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod state;
+mod commands;
+
 use image::{ImageBuffer, ImageFormat};
 use std::io::Cursor;
+use commands::*;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -65,7 +69,7 @@ fn get_image() -> Result<Vec<u8>, String> {
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet, get_image])
+        .invoke_handler(tauri::generate_handler![greet, get_image, connect, get_screen])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
