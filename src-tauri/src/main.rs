@@ -2,8 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use image::{ImageBuffer, ImageFormat};
-use std::io::{Cursor, Write};
-use num_complex::Complex; 
+use std::io::Cursor;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -16,7 +15,7 @@ fn greet(name: &str) -> String {
 fn get_image() -> Result<Vec<u8>, String> {
     let imgx = 800;
     let imgy = 800;
-
+    
     let scalex = 3.0 / imgx as f32;
     let scaley = 3.0 / imgy as f32;
 
@@ -58,7 +57,7 @@ fn get_image() -> Result<Vec<u8>, String> {
     let mut cursor = Cursor::new(&mut buf);
 
     // 将图像数据以 JPEG 格式写入到 buf 中
-    imgbuf.write_to(&mut cursor, ImageFormat::Jpeg).map_err(|e| format!("编码图像失败: {:?}", e))?;
+    imgbuf.write_to(&mut cursor, ImageFormat::Bmp).map_err(|e| format!("编码图像失败: {:?}", e))?;
 
     // 将包含图像数据的 Vec<u8> 返回给前端
     Ok(buf)
@@ -66,7 +65,7 @@ fn get_image() -> Result<Vec<u8>, String> {
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet,get_image])
+        .invoke_handler(tauri::generate_handler![greet, get_image])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
