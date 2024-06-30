@@ -7,15 +7,23 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
-mod state;
 mod commands;
 mod config;
+mod state;
 use commands::*;
 
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![greet, get_image, connect, get_screen, update_screen])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            get_image,
+            connect,
+            get_screen,
+            update_screen,
+            get_tasks,
+            run_task
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
