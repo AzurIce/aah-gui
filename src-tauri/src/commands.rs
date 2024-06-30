@@ -60,6 +60,21 @@ pub fn update_screen() -> Result<(), String> {
     core.update_screen()
 }
 
+
+
+#[tauri::command]
+pub fn get_deploy_analyze_result() {
+    let mut core = core_instance().lock().unwrap();
+    if core.is_none() {
+        return Err("No device connected".to_string());
+    }
+    let core = core.as_mut().unwrap();
+
+    let res = core.analyze_deploy().unwrap();
+}
+
+
+
 #[tauri::command]
 pub fn get_screen(
     windows: tauri::Window,
@@ -170,11 +185,5 @@ mod test {
                 panic!("Test failed: Connection error");
             }
         }
-
-        // 调用 get_screen() 函数获取屏幕数据
-        // let result1 = get_screen();
-
-        // 这是个sb操作，保持注释就好
-        // println!("{:?}", result1);
     }
 }
