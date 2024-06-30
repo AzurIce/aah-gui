@@ -141,6 +141,17 @@ mod test {
     use super::*;
 
     #[test]
+    fn screenshot() {
+        let mut core = AAH::connect("127.0.0.1:16384", "./resources").unwrap();
+
+        core.update_screen().unwrap();
+        let screen = core.get_screen().unwrap();
+
+        let dir = Path::new("./resources/templates/MUMU-1920x1080");
+        screen.save(dir.join("mission-day.png")).unwrap();
+    }
+
+    #[test]
     fn foo() {
         let serial = String::from("127.0.0.1:16384");
 
