@@ -1,18 +1,37 @@
 import { createSignal, onMount } from "solid-js";
 import logo from "./assets/logo.svg";
 import { invoke } from "@tauri-apps/api/core";
+import { TextField, Button } from "@suid/material";
 import "./App.css";
+
+const local = "127.0.0.1:16384";
 
 function App() {
   let canvas: HTMLCanvasElement | undefined;
   const [greetMsg, setGreetMsg] = createSignal("");
   const [name, setName] = createSignal("");
+  // 序列号
+  const [serial, setSerial] = createSignal("");
 
   const [connected, setConnected] = createSignal(false);
 
-  onMount(async () => {
+  // onMount(async () => {
+  //   try {
+  //     await invoke("connect", { serial: "1577208554005QT" });
+  //     // setConnected(true); // 确保在连接成功后设置状态为true
+  //     setConnected(true)
+  //     console.log(connected)
+
+  //     renderScreen()
+  //   } catch (error) {
+  //     console.error("Failed to connect or get screen:", error);
+  //   }
+  // })
+
+  // 输入序列号，点击确认按钮，获取屏幕画面
+  async function getScreen() {
     try {
-      await invoke("connect", { serial: "127.0.0.1:16384" });
+      await invoke("connect", { serial: serial() });
       // setConnected(true); // 确保在连接成功后设置状态为true
       setConnected(true)
       console.log(connected)
@@ -21,7 +40,8 @@ function App() {
     } catch (error) {
       console.error("Failed to connect or get screen:", error);
     }
-  })
+
+  }
 
   async function renderScreen() {
     // 连接设备并获取图像数据
@@ -55,12 +75,28 @@ function App() {
 
   return (
     <div class="container">
+      {/* 将TextField与serial()绑定 */}
+      <TextField
+        label="序列号"
+        variant="outlined"
+        value={serial()}
+        onChange={(e) => {
+          const newSerial = e.currentTarget.value;
+          setSerial(newSerial);
+          console.log("现在的序列号是：", newSerial);
+        }}
+      />
+      <Button variant="contained" onClick={getScreen}>获取画面</Button>
       <canvas ref={canvas} style={{
         width: '100%',
         height: '100%',
         "aspect-ratio": "1"
       }}></canvas>
-      <button onClick={updateScreen}>确认</button>
+      <Button variant="outlined" onClick={updateScreen}>更新画面</Button>
+
+
+
+
       <h1>Welcome to Tauri!</h1>
 
       <div class="row">
