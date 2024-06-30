@@ -1,5 +1,4 @@
 import { createSignal, onMount, For, createEffect } from "solid-js";
-import logo from "./assets/logo.svg";
 import { invoke } from "@tauri-apps/api/core";
 import { TextField, Button, IconButton } from "@suid/material";
 import {
@@ -19,12 +18,12 @@ const local = "127.0.0.1:16384";
 
 function App() {
   let canvas: HTMLCanvasElement | undefined;
-  const [greetMsg, setGreetMsg] = createSignal("");
-  const [name, setName] = createSignal("");
-  // 序列号
-  const [serial, setSerial] = createSignal("");
 
+  // 设备序列号
+  const [serial, setSerial] = createSignal("");
+  // 当前连接状态
   const [connected, setConnected] = createSignal(false);
+  // 任务列表（字符串型数组）
   const [tasks, setTasks] = createSignal<string[]>();
 
   createEffect(async () => {
@@ -34,24 +33,13 @@ function App() {
     }
   })
 
-  // onMount(async () => {
-  //   try {
-  //     const tasks = await invoke("get_tasks");
-  //     console.log(tasks);
-  //     // setConnected(true); // 确保在连接成功后设置状态为true
-
-  //   } catch (error) {
-  //     console.error("Failed to connect or get screen:", error);
-  //   }
-  // })
 
   // 输入序列号，点击确认按钮，获取屏幕画面
   async function getScreen() {
     try {
       await invoke("connect", { serial: serial() });
-      // setConnected(true); // 确保在连接成功后设置状态为true
+      // 确保在连接成功后设置状态为true
       setConnected(true)
-      // renderScreen()
     } catch (error) {
       console.error("Failed to connect or get screen:", error);
     }
@@ -69,7 +57,7 @@ function App() {
       console.timeEnd("aaa")
     }
   }
-
+  // 绘制屏幕画面
   async function drawImageOnCanvas(imageData: Uint8Array) {
     const ctx = canvas!.getContext("bitmaprenderer");
     // 假设imageData是从后端接收到的Uint8Array
@@ -77,12 +65,12 @@ function App() {
     const bitmap = await createImageBitmap(blob);
     ctx?.transferFromImageBitmap(bitmap);
   }
-
+  // 更新屏幕画面
   async function updateScreen() {
     await invoke("update_screen")
     renderScreen()
   }
-
+  // 更新任务列表
   async function updateTasks() {
     setTasks(await invoke("get_tasks"));
   }

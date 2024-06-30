@@ -1,6 +1,6 @@
 use std::{io::Cursor, path::Path, time::Instant};
 
-use aah_core::AAH;
+use aah_core::{vision::analyzer::deploy::DeployAnalyzerOutput, AAH};
 use image::{ImageBuffer, ImageFormat};
 
 use crate::state::core_instance;
@@ -60,10 +60,8 @@ pub fn update_screen() -> Result<(), String> {
     core.update_screen()
 }
 
-
-
 #[tauri::command]
-pub fn get_deploy_analyze_result() {
+pub fn get_deploy_analyze_result() -> Result<DeployAnalyzerOutput, String> {
     let mut core = core_instance().lock().unwrap();
     if core.is_none() {
         return Err("No device connected".to_string());
@@ -71,9 +69,8 @@ pub fn get_deploy_analyze_result() {
     let core = core.as_mut().unwrap();
 
     let res = core.analyze_deploy().unwrap();
+    Ok(res)
 }
-
-
 
 #[tauri::command]
 pub fn get_screen(
