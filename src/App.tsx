@@ -3,6 +3,8 @@ import logo from "./assets/logo.svg";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
+const local = "127.0.0.1:16384";
+
 function App() {
   let canvas: HTMLCanvasElement | undefined;
   const [greetMsg, setGreetMsg] = createSignal("");
@@ -12,7 +14,7 @@ function App() {
 
   onMount(async () => {
     try {
-      await invoke("connect", { serial: "127.0.0.1:16384" });
+      await invoke("connect", { serial: "1577208554005QT" });
       // setConnected(true); // 确保在连接成功后设置状态为true
       setConnected(true)
       console.log(connected)
