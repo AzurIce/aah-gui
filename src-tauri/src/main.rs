@@ -9,6 +9,7 @@ fn greet(name: &str) -> String {
 
 mod state;
 mod commands;
+mod config;
 use commands::*;
 
 fn main() {
