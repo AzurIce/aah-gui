@@ -14,7 +14,7 @@ pub fn connect(serial: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn get_tasks() -> Result<Vec<String>,String>{
+pub fn get_tasks() -> Result<Vec<String>, String> {
     let mut core = core_instance().lock().unwrap();
     if core.is_none() {
         return Err("No device connected".to_string());
@@ -23,12 +23,23 @@ pub fn get_tasks() -> Result<Vec<String>,String>{
 
     // 调用核心实例的 get_tasks 方法获取任务名称
     let tasks = core.get_tasks();
-    
+
     Ok(tasks)
 }
 
 #[tauri::command]
-pub fn run_task(name: String) -> Result<(),String>{
+pub fn reload_resources() -> Result<(), String> {
+    let mut core = core_instance().lock().unwrap();
+    if core.is_none() {
+        return Err("No device connected".to_string());
+    }
+    let core = core.as_mut().unwrap();
+
+    core.reload_resources()
+}
+
+#[tauri::command]
+pub fn run_task(name: String) -> Result<(), String> {
     let mut core = core_instance().lock().unwrap();
     if core.is_none() {
         return Err("No device connected".to_string());

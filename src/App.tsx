@@ -1,8 +1,19 @@
-import { createSignal, onMount } from "solid-js";
+import { createSignal, onMount, For, createEffect } from "solid-js";
 import logo from "./assets/logo.svg";
 import { invoke } from "@tauri-apps/api/core";
-import { TextField, Button } from "@suid/material";
+import { TextField, Button, IconButton } from "@suid/material";
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableFooter,
+  TableHead,
+  TableRow,
+} from "@suid/material";
 import "./App.css";
+import { Refresh } from "@suid/icons-material";
 
 const local = "127.0.0.1:16384";
 
@@ -14,15 +25,21 @@ function App() {
   const [serial, setSerial] = createSignal("");
 
   const [connected, setConnected] = createSignal(false);
+  const [tasks, setTasks] = createSignal<string[]>();
+
+  createEffect(async () => {
+    if (connected()) {
+      updateTasks();
+      renderScreen();
+    }
+  })
 
   // onMount(async () => {
   //   try {
-  //     await invoke("connect", { serial: "1577208554005QT" });
+  //     const tasks = await invoke("get_tasks");
+  //     console.log(tasks);
   //     // setConnected(true); // 确保在连接成功后设置状态为true
-  //     setConnected(true)
-  //     console.log(connected)
 
-  //     renderScreen()
   //   } catch (error) {
   //     console.error("Failed to connect or get screen:", error);
   //   }
@@ -34,9 +51,7 @@ function App() {
       await invoke("connect", { serial: serial() });
       // setConnected(true); // 确保在连接成功后设置状态为true
       setConnected(true)
-      console.log(connected)
-
-      renderScreen()
+      // renderScreen()
     } catch (error) {
       console.error("Failed to connect or get screen:", error);
     }
@@ -63,18 +78,47 @@ function App() {
     ctx?.transferFromImageBitmap(bitmap);
   }
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setGreetMsg(await invoke("greet", { name: name() }));
-  }
-
   async function updateScreen() {
     await invoke("update_screen")
     renderScreen()
   }
 
+  async function updateTasks() {
+    setTasks(await invoke("get_tasks"));
+  }
+
   return (
     <div class="container">
+      <IconButton onClick={async () => {
+        await invoke("reload_resource");
+        updateTasks();
+      }}>
+        <Refresh />
+      </IconButton>
+      <TableContainer component={Paper}>
+        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+          <TableHead>
+            <TableRow>
+              <TableCell>任务名称</TableCell>
+              <TableCell>操作</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <For each={tasks()}>
+              {(task) => (
+                <TableRow
+                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                >
+                  <TableCell component="th" scope="row">{task}</TableCell>
+                  <TableCell><Button variant="contained" onClick={async () => {
+                    await invoke("run_task", { name: task });
+                  }}>执行任务</Button></TableCell>
+                </TableRow>
+              )}
+            </For>
+          </TableBody>
+        </Table>
+      </TableContainer>
       {/* 将TextField与serial()绑定 */}
       <TextField
         label="序列号"
@@ -86,49 +130,13 @@ function App() {
           console.log("现在的序列号是：", newSerial);
         }}
       />
-      <Button variant="contained" onClick={getScreen}>获取画面</Button>
+      <Button variant="contained" onClick={getScreen}>建立连接</Button>
       <canvas ref={canvas} style={{
         width: '100%',
         height: '100%',
         "aspect-ratio": "1"
       }}></canvas>
       <Button variant="outlined" onClick={updateScreen}>更新画面</Button>
-
-
-
-
-      <h1>Welcome to Tauri!</h1>
-
-      <div class="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://solidjs.com" target="_blank">
-          <img src={logo} class="logo solid" alt="Solid logo" />
-        </a>
-      </div>
-
-      <p>Click on the Tauri, Vite, and Solid logos to learn more.</p>
-
-      <form
-        class="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-
-      <p>{greetMsg()}</p>
     </div>
   );
 }
