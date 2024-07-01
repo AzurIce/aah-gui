@@ -22,7 +22,9 @@ fn main() {
             get_screen,
             update_screen,
             get_tasks,
-            run_task
+            run_task,
+            get_deploy_analyze_result,
+            reload_resources
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

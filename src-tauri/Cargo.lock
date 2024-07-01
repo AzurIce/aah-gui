@@ -5,7 +5,7 @@ version = 3
 [[package]]
 name = "aah-core"
 version = "0.1.0"
-source = "git+https://github.com/AzurIce/azur-arknights-helper.git#b90470bcd4d2544a283ccec71f98c4c9a4f5c7c8"
+source = "git+https://github.com/AzurIce/azur-arknights-helper.git#39920be8d55427f8d0df9bed727965f4ade701fb"
 dependencies = [
  "aah-cv",
  "color-print",
@@ -28,7 +28,7 @@ dependencies = [
 [[package]]
 name = "aah-cv"
 version = "0.1.0"
-source = "git+https://github.com/AzurIce/azur-arknights-helper.git#b90470bcd4d2544a283ccec71f98c4c9a4f5c7c8"
+source = "git+https://github.com/AzurIce/azur-arknights-helper.git#39920be8d55427f8d0df9bed727965f4ade701fb"
 dependencies = [
  "bytemuck",
  "csv",
