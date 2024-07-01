@@ -59,11 +59,54 @@ function App() {
   }
   // 绘制屏幕画面
   async function drawImageOnCanvas(imageData: Uint8Array) {
-    const ctx = canvas!.getContext("bitmaprenderer");
-    // 假设imageData是从后端接收到的Uint8Array
-    const blob = new Blob([imageData], { type: "image/bmp" });
-    const bitmap = await createImageBitmap(blob);
-    ctx?.transferFromImageBitmap(bitmap);
+    // const ctx = canvas!.getContext("bitmaprenderer");
+    // // 假设imageData是从后端接收到的Uint8Array
+    // const blob = new Blob([imageData], { type: "image/bmp" });
+    // const bitmap = await createImageBitmap(blob);
+    // ctx?.transferFromImageBitmap(bitmap);
+
+    // 获取设备像素比
+    const dpr = window.devicePixelRatio || 1;
+
+    // 获取目标画布的显示尺寸
+    const displayWidth = canvas!.clientWidth;
+    const displayHeight = canvas!.clientHeight;
+
+    // 设置目标画布的实际尺寸（考虑设备像素比）
+    canvas!.width = displayWidth * dpr;
+    canvas!.height = displayHeight * dpr;
+
+    // 创建离屏画布
+    const offscreenCanvas = document.createElement('canvas');
+    offscreenCanvas.width = canvas!.width;
+    offscreenCanvas.height = canvas!.height;
+    const offscreenCtx = offscreenCanvas.getContext("2d");
+
+    // 确保 offscreenCtx 存在
+    if (offscreenCtx) {
+      // 清除离屏画布
+      offscreenCtx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+      // 设置透明度
+      offscreenCtx.globalAlpha = 0.5;
+
+      // 假设 imageData 是从后端接收到的 Uint8Array
+      const blob = new Blob([imageData], { type: 'image/bmp' });
+      const bitmap = await createImageBitmap(blob);
+
+      // 在离屏画布上绘制图像
+      offscreenCtx.drawImage(bitmap, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+      // 将离屏画布转换为 ImageBitmap
+      const finalBitmap = await createImageBitmap(offscreenCanvas);
+
+      // 获取 ImageBitmapRenderingContext 并绘制最终图像
+      const ctx = canvas!.getContext('bitmaprenderer');
+      if (ctx) {
+        ctx.transferFromImageBitmap(finalBitmap);
+      }
+    }
+
   }
   // 更新屏幕画面
   async function updateScreen() {

@@ -7,7 +7,9 @@ use image::{DynamicImage, ImageBuffer, ImageFormat};
 #[tauri::command]
 pub fn connect(serial: String) -> Result<(), String> {
     let mut core = core_instance().lock().unwrap();
-    let connected_aah = AAH::connect(serial, "E:\\summer\\azur-arknights-helper\\resources").map_err(|err| format!("{}", err))?;
+    // resources绝对路径
+    let connected_aah = AAH::connect(serial, "D:\\LastProject\\azur-arknights-helper\\resources")
+        .map_err(|err| format!("{}", err))?;
     *core = Some(connected_aah);
     Ok(())
 }
@@ -77,7 +79,6 @@ pub fn get_deploy_analyze_result() -> Result<tauri::ipc::Response, String> {
         .map_err(|e| format!("编码图像失败: {:?}", e))?;
     // println!("elapsed {:?}", start.elapsed());
     Ok(tauri::ipc::Response::new(buf))
-
 }
 
 #[tauri::command]
@@ -166,8 +167,10 @@ mod test {
 
         core.update_screen().unwrap();
         let screen = core.get_screen().unwrap();
-
-        let dir = Path::new("E:\\summer\\azur-arknights-helper\\resources\\templates\\MUMU-1920x1080");
+        // resources绝对路径
+        let dir = Path::new(
+            "D:\\LastProject\\azur-arknights-helper\\resources\\templates\\MUMU-1920x1080",
+        );
         screen.save(dir.join("mission-day.png")).unwrap();
     }
 
