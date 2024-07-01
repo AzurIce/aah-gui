@@ -74,7 +74,11 @@ function App() {
   async function updateTasks() {
     setTasks(await invoke("get_tasks"));
   }
-
+  // 获得分析部署后的结果
+  async function getAnalyzeResult() {
+    const imageData: Uint8Array = new Uint8Array(await invoke("get_deploy_analyze_result"));
+    drawImageOnCanvas(imageData);
+  }
   return (
     <div class="container">
       <IconButton onClick={async () => {
@@ -124,6 +128,7 @@ function App() {
         height: '100%',
         "aspect-ratio": "1"
       }}></canvas>
+      <Button variant="contained" onClick={getAnalyzeResult}>分析部署</Button>
       <Button variant="outlined" onClick={updateScreen}>更新画面</Button>
     </div>
   );

@@ -60,7 +60,7 @@ pub fn update_screen() -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn get_deploy_analyze_result() -> Result<DynamicImage, String> {
+pub fn get_deploy_analyze_result() -> Result<tauri::ipc::Response, String> {
     let mut core = core_instance().lock().unwrap();
     if core.is_none() {
         return Err("No device connected".to_string());
@@ -70,7 +70,13 @@ pub fn get_deploy_analyze_result() -> Result<DynamicImage, String> {
     let res = core.analyze_deploy().unwrap();
 
     let image = res.res_screen;
-    Ok(image)
+    let mut buf = Vec::new();
+    image
+        .write_to(&mut Cursor::new(&mut buf), ImageFormat::Bmp)
+        .map_err(|e| format!("编码图像失败: {:?}", e))?;
+    // println!("elapsed {:?}", start.elapsed());
+    Ok(tauri::ipc::Response::new(buf))
+
 }
 
 #[tauri::command]
