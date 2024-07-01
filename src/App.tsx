@@ -126,7 +126,7 @@ function App() {
       <canvas ref={canvas} style={{
         width: '100%',
         height: '100%',
-        "aspect-ratio": "1"
+        "aspect-ratio": "1920/1080"
       }}></canvas>
       <Button variant="contained" onClick={getAnalyzeResult}>分析部署</Button>
       <Button variant="outlined" onClick={updateScreen}>更新画面</Button>
