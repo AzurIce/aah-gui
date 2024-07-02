@@ -53,7 +53,7 @@ pub async fn run_task(name: String) -> Result<(), String> {
 #[tauri::command]
 pub async fn get_deploy_analyze_result(windows: Window) -> Result<tauri::ipc::Response, String> {
     let mut core = core_instance().lock().unwrap();
-    let mut core = core.as_mut().ok_or("No device connected".to_string())?;
+    let core = core.as_mut().ok_or("No device connected".to_string())?;
 
     let res = core.analyze_deploy().unwrap();
 
@@ -71,22 +71,25 @@ pub async fn get_deploy_analyze_result(windows: Window) -> Result<tauri::ipc::Re
 pub async fn get_screen(
     windows: tauri::Window,
     request: tauri::ipc::Request<'_>,
-) -> Result<tauri::ipc::Response, String> {
+) -> Result<tauri::ipc::Response, String> { // ! cost 818.778076171875 ms (total) =  700ms + 100ms(Serialize ad Deserialize and transport)
+// ) -> Result<Vec<u8>, String> { // ! cost 1276.532958984375 ms (total) = 700ms + 400ms(Serialize ad Deserialize and transport)
     let start = Instant::now();
     let mut core = core_instance().lock().unwrap();
-    let mut core = core.as_mut().ok_or("No device connected".to_string())?;
+    let core = core.as_mut().ok_or("No device connected".to_string())?;
 
-    let screen = core.get_screen()?;  // 假设 get_screen 返回的是 DynamicImage 类型
+    // ! screenshot 700ms
+    let screen = core.get_raw_screen()?;  // 假设 get_screen 返回的是 DynamicImage 类型
     
-    let mut buf = Vec::new();
-    screen
-        .write_to(&mut Cursor::new(&mut buf), ImageFormat::Png)
-        .map_err(|e| format!("编码图像失败: {:?}", e))?;
+    // let mut buf = Vec::new();
+    // screen
+    //     .write_to(&mut Cursor::new(&mut buf), ImageFormat::Png)
+    //     .map_err(|e| format!("编码图像失败: {:?}", e))?;
     println!("elapsed {:?}", start.elapsed());
     
     // windows.emit("get-screen", "get-screen-succeed");
     // Ok(())
-    Ok(tauri::ipc::Response::new(buf))
+    Ok(tauri::ipc::Response::new(screen))
+    // Ok(screen)
 }
 
 #[tauri::command]
