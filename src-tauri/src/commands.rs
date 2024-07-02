@@ -62,7 +62,6 @@ pub async fn update_screen() -> Result<(), String> {
 }
 #[tauri::command]
 pub async fn serialization_picture() -> Result<tauri::ipc::Response, String> {
-
     let start = Instant::now();
     let mut core = core_instance().lock().unwrap();
     if core.is_none() {
@@ -83,15 +82,15 @@ pub async fn serialization_picture() -> Result<tauri::ipc::Response, String> {
 #[tauri::command]
 // pub async fn get_deploy_analyze_result(windows: Window) -> Result<tauri::ipc::Response, String> {
 pub async fn get_deploy_analyze_result(windows: Window) -> Result<(), String> {
-    let mut core = core_instance().lock().unwrap();
-    if core.is_none() {
-        return Err("No device connected".to_string());
-    }
-    let core = core.as_mut().unwrap();
+    // let mut core = core_instance().lock().unwrap();
+    // if core.is_none() {
+    //     return Err("No device connected".to_string());
+    // }
+    // let core = core.as_mut().unwrap();
 
-    let res = core.analyze_deploy().unwrap();
+    // let res = core.analyze_deploy().unwrap();
 
-    let image = res.res_screen;
+    // let image = res.res_screen;
 
     // let mut buf = Vec::new();
     // image
