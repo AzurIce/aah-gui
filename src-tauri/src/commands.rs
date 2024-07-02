@@ -9,7 +9,7 @@ use tauri::{window, Manager, Window};
 pub async fn connect(serial: String) -> Result<(), String> {
     let mut core = core_instance().lock().unwrap();
     // resources绝对路径
-    let connected_aah = AAH::connect(serial, "E:\\summer\\azur-arknights-helper\\resources")
+    let connected_aah = AAH::connect(serial, "D:\\LastProject\\azur-arknights-helper\\resources")
         .map_err(|err| format!("{}", err))?;
     *core = Some(connected_aah);
     Ok(())

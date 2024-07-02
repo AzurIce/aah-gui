@@ -1,4 +1,5 @@
-import { createSignal, onMount, For, createEffect } from "solid-js";
+import { createSignal, For, createEffect } from "solid-js";
+import { emit, listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { TextField, Button, IconButton } from "@suid/material";
 import {
@@ -7,7 +8,6 @@ import {
   TableBody,
   TableCell,
   TableContainer,
-  TableFooter,
   TableHead,
   TableRow,
 } from "@suid/material";
@@ -33,8 +33,7 @@ function App() {
     }
   })
 
-
-  // 输入序列号，点击确认按钮，获取屏幕画面
+  // 输入序列号，点击确认按钮，与后端建立连接
   async function getScreen() {
     try {
       await invoke("connect", { serial: serial() });
@@ -46,82 +45,106 @@ function App() {
 
   }
 
+  // 从后端接收画面数据，并在canvas上绘制
   async function renderScreen() {
     // 连接设备并获取图像数据
     // 等待连接成功后再获取并绘制屏幕数据
     if (connected()) {
       console.time("aaa")
-      const imageData: Uint8Array = new Uint8Array(await invoke("get_screen"));
-      console.timeLog("aaa")
-      drawImageOnCanvas(imageData);
-      console.timeEnd("aaa")
+      // const imageData: Uint8Array = new Uint8Array(await invoke("get_screen"));
+      await invoke("get_screen");
+      // console.timeLog("aaa")
+      // drawImageOnCanvas(imageData);
+      // console.timeEnd("aaa")
     }
   }
+
   // 绘制屏幕画面
   async function drawImageOnCanvas(imageData: Uint8Array) {
-    // const ctx = canvas!.getContext("bitmaprenderer");
-    // // 假设imageData是从后端接收到的Uint8Array
-    // const blob = new Blob([imageData], { type: "image/bmp" });
-    // const bitmap = await createImageBitmap(blob);
-    // ctx?.transferFromImageBitmap(bitmap);
+    const ctx = canvas!.getContext("bitmaprenderer");
+    const blob = new Blob([imageData], { type: "image/bmp" });
+    const bitmap = await createImageBitmap(blob);
+    ctx?.transferFromImageBitmap(bitmap);
 
-    // 获取设备像素比
-    const dpr = window.devicePixelRatio || 1;
+    // // 获取设备像素比
+    // const dpr = window.devicePixelRatio || 1;
 
-    // 获取目标画布的显示尺寸
-    const displayWidth = canvas!.clientWidth;
-    const displayHeight = canvas!.clientHeight;
+    // // 获取目标画布的显示尺寸
+    // const displayWidth = canvas!.clientWidth;
+    // const displayHeight = canvas!.clientHeight;
 
-    // 设置目标画布的实际尺寸（考虑设备像素比）
-    canvas!.width = displayWidth * dpr;
-    canvas!.height = displayHeight * dpr;
+    // // 设置目标画布的实际尺寸（考虑设备像素比）
+    // canvas!.width = displayWidth * dpr;
+    // canvas!.height = displayHeight * dpr;
 
-    // 创建离屏画布
-    const offscreenCanvas = document.createElement('canvas');
-    offscreenCanvas.width = canvas!.width;
-    offscreenCanvas.height = canvas!.height;
-    const offscreenCtx = offscreenCanvas.getContext("2d");
+    // // 创建离屏画布
+    // const offscreenCanvas = document.createElement('canvas');
+    // offscreenCanvas.width = canvas!.width;
+    // offscreenCanvas.height = canvas!.height;
+    // const offscreenCtx = offscreenCanvas.getContext("2d");
 
-    // 确保 offscreenCtx 存在
-    if (offscreenCtx) {
-      // 清除离屏画布
-      offscreenCtx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+    // // 确保 offscreenCtx 存在
+    // if (offscreenCtx) {
+    //   // 清除离屏画布
+    //   offscreenCtx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
 
-      // 设置透明度
-      offscreenCtx.globalAlpha = 0.5;
+    //   // 加载第一张图片
+    //   const img = new Image();
+    //   img.src = "/image.PNG";
+    //   img.onload = async () => {
+    //     offscreenCtx.drawImage(img, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+    //   }
 
-      // 假设 imageData 是从后端接收到的 Uint8Array
-      const blob = new Blob([imageData], { type: 'image/bmp' });
-      const bitmap = await createImageBitmap(blob);
+    //   // 设置透明度
+    //   offscreenCtx.globalAlpha = 0.5;
 
-      // 在离屏画布上绘制图像
-      offscreenCtx.drawImage(bitmap, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+    //   // 假设 imageData 是从后端接收到的 Uint8Array
+    //   const blob = new Blob([imageData], { type: 'image/bmp' });
+    //   const bitmap = await createImageBitmap(blob);
 
-      // 将离屏画布转换为 ImageBitmap
-      const finalBitmap = await createImageBitmap(offscreenCanvas);
+    //   // 在离屏画布上绘制图像
+    //   offscreenCtx.drawImage(bitmap, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
 
-      // 获取 ImageBitmapRenderingContext 并绘制最终图像
-      const ctx = canvas!.getContext('bitmaprenderer');
-      if (ctx) {
-        ctx.transferFromImageBitmap(finalBitmap);
-      }
-    }
+    //   // 将离屏画布转换为 ImageBitmap
+    //   const finalBitmap = await createImageBitmap(offscreenCanvas);
 
+    //   // 获取 ImageBitmapRenderingContext 并绘制最终图像
+    //   const ctx = canvas!.getContext('bitmaprenderer');
+    //   if (ctx) {
+    //     ctx.transferFromImageBitmap(finalBitmap);
+    //   }
+    // }
   }
+
   // 更新屏幕画面
   async function updateScreen() {
     await invoke("update_screen")
     renderScreen()
   }
+
   // 更新任务列表
   async function updateTasks() {
     setTasks(await invoke("get_tasks"));
   }
+
   // 获得分析部署后的结果
   async function getAnalyzeResult() {
     const imageData: Uint8Array = new Uint8Array(await invoke("get_deploy_analyze_result"));
     drawImageOnCanvas(imageData);
   }
+
+  // 监听后端更新画面信息, 再invoke到后端的一个command以获得图像数据
+  async function eventListener() {
+    listen('get-screen', async event => {
+      console.log('Received event: ${event.payload}');
+      // 从后端的另一个指令拿到图像数据
+      const imageData: Uint8Array = new Uint8Array(await invoke("serialization_picture"));
+      // 在canvas上绘制图像
+      drawImageOnCanvas(imageData);
+
+    })
+  }
+
   return (
     <div class="container">
       <IconButton onClick={async () => {
