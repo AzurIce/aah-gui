@@ -1,15 +1,15 @@
-use std::{io::Cursor, os::windows, path::Path, time::Instant};
+use std::{io::Cursor, path::Path, time::Instant};
 
 use crate::state::core_instance;
-use aah_core::{vision::analyzer::deploy::DeployAnalyzerOutput, AAH};
-use image::{DynamicImage, ImageBuffer, ImageFormat};
-use tauri::{window, Manager, Window};
+use aah_core::AAH;
+use image::{ImageBuffer, ImageFormat};
+use tauri::Window;
 
 #[tauri::command]
 pub async fn connect(serial: String) -> Result<(), String> {
     let mut core = core_instance().lock().unwrap();
     // resources绝对路径
-    let connected_aah = AAH::connect(serial, "D:\\LastProject\\azur-arknights-helper\\resources")
+    let connected_aah = AAH::connect(serial, "../../azur-arknights-helper/resources")
         .map_err(|err| format!("{}", err))?;
     *core = Some(connected_aah);
     Ok(())
@@ -51,80 +51,42 @@ pub async fn run_task(name: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn update_screen() -> Result<(), String> {
+pub async fn get_deploy_analyze_result(windows: Window) -> Result<tauri::ipc::Response, String> {
     let mut core = core_instance().lock().unwrap();
-    if core.is_none() {
-        return Err("No device connected".to_string());
-    }
-    let core = core.as_mut().unwrap();
+    let mut core = core.as_mut().ok_or("No device connected".to_string())?;
 
-    core.update_screen()
-}
-#[tauri::command]
-pub async fn serialization_picture() -> Result<tauri::ipc::Response, String> {
-    let start = Instant::now();
-    let mut core = core_instance().lock().unwrap();
-    if core.is_none() {
-        return Err("No device connected".to_string());
-    }
-    let core = core.as_mut().unwrap();
+    let res = core.analyze_deploy().unwrap();
 
-    let screen = core.get_screen()?;
-
+    let image = res.res_screen;
+    
     let mut buf = Vec::new();
-    screen
+    image
         .write_to(&mut Cursor::new(&mut buf), ImageFormat::Png)
         .map_err(|e| format!("编码图像失败: {:?}", e))?;
-    println!("elapsed {:?}", start.elapsed());
+
     Ok(tauri::ipc::Response::new(buf))
-}
-
-#[tauri::command]
-// pub async fn get_deploy_analyze_result(windows: Window) -> Result<tauri::ipc::Response, String> {
-pub async fn get_deploy_analyze_result(windows: Window) -> Result<(), String> {
-    // let mut core = core_instance().lock().unwrap();
-    // if core.is_none() {
-    //     return Err("No device connected".to_string());
-    // }
-    // let core = core.as_mut().unwrap();
-
-    // let res = core.analyze_deploy().unwrap();
-
-    // let image = res.res_screen;
-
-    // let mut buf = Vec::new();
-    // image
-    //     .write_to(&mut Cursor::new(&mut buf), ImageFormat::Bmp)
-    //     .map_err(|e| format!("编码图像失败: {:?}", e))?;
-
-    let _ = windows.emit("analyze-result", "analyze-result-success");
-    Ok(())
-    // println!("elapsed {:?}", start.elapsed());
-    //Ok(tauri::ipc::Response::new(buf))
 }
 
 #[tauri::command]
 pub async fn get_screen(
     windows: tauri::Window,
     request: tauri::ipc::Request<'_>,
-) -> Result<(), String> {
-    // let start = Instant::now();
-    // let mut core = core_instance().lock().unwrap();
-    // if core.is_none() {
-    //     return Err("No device connected".to_string());
-    // }
-    // let core = core.as_mut().unwrap();
+) -> Result<tauri::ipc::Response, String> {
+    let start = Instant::now();
+    let mut core = core_instance().lock().unwrap();
+    let mut core = core.as_mut().ok_or("No device connected".to_string())?;
 
-    // let screen = core.get_screen()?;
-    // let mut buf = Vec::new();
-    // screen
-    //     .write_to(&mut Cursor::new(&mut buf), ImageFormat::Png)
-    //     .map_err(|e| format!("编码图像失败: {:?}", e))?;
-    // println!("elapsed {:?}", start.elapsed());
+    let screen = core.get_screen()?;  // 假设 get_screen 返回的是 DynamicImage 类型
     
-    windows.emit("get-screen", "get-screen-succeed");
-    Ok(())
-    // Ok(tauri::ipc::Response::new(buf))
+    let mut buf = Vec::new();
+    screen
+        .write_to(&mut Cursor::new(&mut buf), ImageFormat::Png)
+        .map_err(|e| format!("编码图像失败: {:?}", e))?;
+    println!("elapsed {:?}", start.elapsed());
+    
+    // windows.emit("get-screen", "get-screen-succeed");
+    // Ok(())
+    Ok(tauri::ipc::Response::new(buf))
 }
 
 #[tauri::command]
@@ -189,11 +151,10 @@ mod test {
     fn screenshot() {
         let mut core = AAH::connect(
             "127.0.0.1:16384",
-            "E:\\summer\\azur-arknights-helper\\resources",
+            "../../azur-arknights-helper\\resources",
         )
         .unwrap();
 
-        core.update_screen().unwrap();
         let screen = core.get_screen().unwrap();
         // resources绝对路径
         let dir =

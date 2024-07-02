@@ -1,4 +1,4 @@
-use std::sync::{ Mutex, OnceLock};
+use std::sync::{Mutex, OnceLock};
 
 use aah_core::AAH;
 
