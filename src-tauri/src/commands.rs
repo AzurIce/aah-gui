@@ -61,7 +61,22 @@ pub async fn update_screen() -> Result<(), String> {
     core.update_screen()
 }
 #[tauri::command]
-pub async fn serialization_picture(buf: Vec<u8>) -> Result<tauri::ipc::Response, String> {
+pub async fn serialization_picture() -> Result<tauri::ipc::Response, String> {
+
+    let start = Instant::now();
+    let mut core = core_instance().lock().unwrap();
+    if core.is_none() {
+        return Err("No device connected".to_string());
+    }
+    let core = core.as_mut().unwrap();
+
+    let screen = core.get_screen()?;
+
+    let mut buf = Vec::new();
+    screen
+        .write_to(&mut Cursor::new(&mut buf), ImageFormat::Png)
+        .map_err(|e| format!("编码图像失败: {:?}", e))?;
+    println!("elapsed {:?}", start.elapsed());
     Ok(tauri::ipc::Response::new(buf))
 }
 
@@ -78,12 +93,12 @@ pub async fn get_deploy_analyze_result(windows: Window) -> Result<(), String> {
 
     let image = res.res_screen;
 
-    let mut buf = Vec::new();
-    image
-        .write_to(&mut Cursor::new(&mut buf), ImageFormat::Bmp)
-        .map_err(|e| format!("编码图像失败: {:?}", e))?;
+    // let mut buf = Vec::new();
+    // image
+    //     .write_to(&mut Cursor::new(&mut buf), ImageFormat::Bmp)
+    //     .map_err(|e| format!("编码图像失败: {:?}", e))?;
 
-    let _ = windows.emit("analyze-result", tauri::ipc::Response::new(buf));
+    let _ = windows.emit("analyze-result", "analyze-result-success");
     Ok(())
     // println!("elapsed {:?}", start.elapsed());
     //Ok(tauri::ipc::Response::new(buf))
@@ -94,21 +109,21 @@ pub async fn get_screen(
     windows: tauri::Window,
     request: tauri::ipc::Request<'_>,
 ) -> Result<(), String> {
-    let start = Instant::now();
-    let mut core = core_instance().lock().unwrap();
-    if core.is_none() {
-        return Err("No device connected".to_string());
-    }
-    let core = core.as_mut().unwrap();
+    // let start = Instant::now();
+    // let mut core = core_instance().lock().unwrap();
+    // if core.is_none() {
+    //     return Err("No device connected".to_string());
+    // }
+    // let core = core.as_mut().unwrap();
 
-    let screen = core.get_screen()?;
-    let mut buf = Vec::new();
-    screen
-        .write_to(&mut Cursor::new(&mut buf), ImageFormat::Png)
-        .map_err(|e| format!("编码图像失败: {:?}", e))?;
-    println!("elapsed {:?}", start.elapsed());
+    // let screen = core.get_screen()?;
+    // let mut buf = Vec::new();
+    // screen
+    //     .write_to(&mut Cursor::new(&mut buf), ImageFormat::Png)
+    //     .map_err(|e| format!("编码图像失败: {:?}", e))?;
+    // println!("elapsed {:?}", start.elapsed());
     
-    windows.emit("get-screen", tauri::ipc::Response::new(buf));
+    windows.emit("get-screen", "get-screen-succeed");
     Ok(())
     // Ok(tauri::ipc::Response::new(buf))
 }
