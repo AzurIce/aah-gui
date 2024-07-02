@@ -27,6 +27,7 @@ function App() {
   createEffect(async () => {
     if (connected()) {
       updateScreen();
+      setTasks(await invoke("get_tasks"));
     }
   })
   const onConnect = async () => {
@@ -43,7 +44,7 @@ function App() {
     }
   }
   // 任务列表（字符串型数组）
-  const [tasks, setTasks] = createSignal<string[]>();
+  const [tasks, setTasks] = createSignal<string[]>([]);
 
   // 将 imageData 绘制在 canvas 上
   const drawImage = async (imageData: Uint8Array) => {
@@ -54,20 +55,23 @@ function App() {
   }
 
   const updateScreen = async () => {
+    console.time("get_screen")
     const imageData: Uint8Array = new Uint8Array(await invoke("get_screen"));
+    console.timeEnd("get_screen")
     drawImage(imageData);
   }
 
   // screen_updated 事件
-  let unlisten: UnlistenFn | null;
-  onMount(async () => {
-    unlisten = await listen('screen_updated', updateScreen)
-  })
-  onCleanup(() => {
-    if (unlisten) {
-      unlisten();
-    }
-  })
+  // let unlisten: UnlistenFn | null;
+  // onMount(async () => {
+  //   unlisten = await listen('screen_updated', updateScreen)
+  // })
+  // onCleanup(() => {
+  //   if (unlisten) {
+  //     unlisten();
+  //   }
+  // })
+
 
   // 绘制屏幕画面
   async function drawImageOnCanvas(imageData: Uint8Array) {
@@ -144,9 +148,10 @@ function App() {
   </>
 
   return (
-    <div class="flex flex-col w-full h-full items-center justify-center p-4 box-border">
+    <div class="flex flex-col w-full h-full max-h-full items-center p-4 box-border overflow-hidden">
       <Show when={connected()} fallback={<ConnectView />}>
-        <div class="flex-1 flex w-full box-border gap-4">
+        <div class="flex-1 flex w-full max-h-full box-border gap-4">
+          {/* Screen part */}
           <Card class="flex-1 flex flex-col gap-2 h-full items-start justify-stretch">
             <div class="flex items-center justify-between border-box ml-2 mr-2">
               <span>Screen</span>
@@ -154,10 +159,11 @@ function App() {
                 <Refresh />
               </IconButton>
             </div>
-            <canvas ref={canvas} class="w-full h-full aspect-video" />
+            <canvas ref={canvas} class="w-full"/>
           </Card>
+          {/* Right part */}
           <div class="h-full flex flex-col gap-4">
-            <Card class="p-2 flex-1">
+            <Card class="flex flex-col p-2">
               <span>Tasks</span>
               <IconButton onClick={async () => {
                 await invoke("reload_resource");
@@ -165,30 +171,18 @@ function App() {
               }}>
                 <Refresh />
               </IconButton>
-              <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 300 }} aria-label="simple table">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>任务名称</TableCell>
-                      <TableCell>操作</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    <For each={tasks()}>
-                      {(task) => (
-                        <TableRow
-                          sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                        >
-                          <TableCell component="th" scope="row">{task}</TableCell>
-                          <TableCell><Button variant="contained" onClick={async () => {
-                            await invoke("run_task", { name: task });
-                          }}>执行任务</Button></TableCell>
-                        </TableRow>
-                      )}
-                    </For>
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <div class="flex flex-col overflow-y-auto gap-2 min-w-60">
+                <For each={tasks()}>
+                  {(task) => (
+                    <div class="flex justify-between items-center">
+                      <span>{task}</span>
+                      <Button variant="contained" onClick={async () => {
+                        await invoke("run_task", { name: task });
+                      }}>执行任务</Button>
+                    </div>
+                  )}
+                </For>
+              </div>
             </Card>
             <Card class="p-2 flex flex-col gap-2">
               <span>Analyzers</span>
