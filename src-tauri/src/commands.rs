@@ -83,7 +83,7 @@ pub async fn get_deploy_analyze_result(windows: Window) -> Result<(), String> {
         .write_to(&mut Cursor::new(&mut buf), ImageFormat::Bmp)
         .map_err(|e| format!("编码图像失败: {:?}", e))?;
 
-    let _ = windows.emit("analyze-result", buf);
+    let _ = windows.emit("analyze-result", tauri::ipc::Response::new(buf));
     Ok(())
     // println!("elapsed {:?}", start.elapsed());
     //Ok(tauri::ipc::Response::new(buf))
@@ -108,7 +108,7 @@ pub async fn get_screen(
         .map_err(|e| format!("编码图像失败: {:?}", e))?;
     println!("elapsed {:?}", start.elapsed());
     
-    windows.emit("get-screen", buf);
+    windows.emit("get-screen", tauri::ipc::Response::new(buf));
     Ok(())
     // Ok(tauri::ipc::Response::new(buf))
 }
