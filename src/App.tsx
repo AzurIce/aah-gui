@@ -1,7 +1,7 @@
 import { createSignal, For, createEffect, onMount, onCleanup, Show } from "solid-js";
 import { UnlistenFn, emit, listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { TextField, Button, IconButton, Card } from "@suid/material";
+import { TextField, Button, IconButton, Card, CircularProgress } from "@suid/material";
 import {
   Paper,
   Table,
@@ -20,14 +20,22 @@ function App() {
   let canvas: HTMLCanvasElement | undefined;
 
   // 设备序列号
-  const [serial, setSerial] = createSignal("127.0.0.1:16384");
+  const [serial, setSerial] = createSignal("127.0.0.1:5555");
   // 当前连接状态
   const [connected, setConnected] = createSignal(false);
   const [connecting, setConnecting] = createSignal(false);
+  // 更新屏幕状态
+  const [screenUpdating, setScreenUpdating] = createSignal(false);
+  // 更新任务状态
+  const [taskUpdating, setTaskUpdating] = createSignal(false);
+
   createEffect(async () => {
     if (connected()) {
       updateScreen();
+      setScreenUpdating(false);
+
       setTasks(await invoke("get_tasks"));
+
     }
   })
   const onConnect = async () => {
@@ -56,9 +64,11 @@ function App() {
 
   const updateScreen = async () => {
     console.time("get_screen")
+    setScreenUpdating(true);
     const imageData: Uint8Array = new Uint8Array(await invoke("get_screen"));
     console.timeEnd("get_screen")
     drawImage(imageData);
+    setScreenUpdating(false);
   }
 
   // screen_updated 事件
@@ -71,61 +81,6 @@ function App() {
   //     unlisten();
   //   }
   // })
-
-
-  // 绘制屏幕画面
-  async function drawImageOnCanvas(imageData: Uint8Array) {
-
-
-    // // 获取设备像素比
-    // const dpr = window.devicePixelRatio || 1;
-
-    // // 获取目标画布的显示尺寸
-    // const displayWidth = canvas!.clientWidth;
-    // const displayHeight = canvas!.clientHeight;
-
-    // // 设置目标画布的实际尺寸（考虑设备像素比）
-    // canvas!.width = displayWidth * dpr;
-    // canvas!.height = displayHeight * dpr;
-
-    // // 创建离屏画布
-    // const offscreenCanvas = document.createElement('canvas');
-    // offscreenCanvas.width = canvas!.width;
-    // offscreenCanvas.height = canvas!.height;
-    // const offscreenCtx = offscreenCanvas.getContext("2d");
-
-    // // 确保 offscreenCtx 存在
-    // if (offscreenCtx) {
-    //   // 清除离屏画布
-    //   offscreenCtx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
-
-    //   // 加载第一张图片
-    //   const img = new Image();
-    //   img.src = "/image.PNG";
-    //   img.onload = async () => {
-    //     offscreenCtx.drawImage(img, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
-    //   }
-
-    //   // 设置透明度
-    //   offscreenCtx.globalAlpha = 0.5;
-
-    //   // 假设 imageData 是从后端接收到的 Uint8Array
-    //   const blob = new Blob([imageData], { type: 'image/bmp' });
-    //   const bitmap = await createImageBitmap(blob);
-
-    //   // 在离屏画布上绘制图像
-    //   offscreenCtx.drawImage(bitmap, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
-
-    //   // 将离屏画布转换为 ImageBitmap
-    //   const finalBitmap = await createImageBitmap(offscreenCanvas);
-
-    //   // 获取 ImageBitmapRenderingContext 并绘制最终图像
-    //   const ctx = canvas!.getContext('bitmaprenderer');
-    //   if (ctx) {
-    //     ctx.transferFromImageBitmap(finalBitmap);
-    //   }
-    // }
-  }
 
   // 获得分析部署后的结果
   async function getAnalyzeResult() {
@@ -155,22 +110,32 @@ function App() {
           <Card class="flex-1 flex flex-col gap-2 h-full items-start justify-stretch">
             <div class="flex items-center justify-between border-box ml-2 mr-2">
               <span>Screen</span>
-              <IconButton onClick={updateScreen}>
+
+              <Show when={screenUpdating()} fallback={<IconButton onClick={updateScreen}>
                 <Refresh />
-              </IconButton>
+              </IconButton>}>
+                <CircularProgress color="inherit" />
+              </Show>
+
             </div>
-            <canvas ref={canvas} class="w-full"/>
+            <canvas ref={canvas} class="w-full" />
           </Card>
           {/* Right part */}
           <div class="h-full flex flex-col gap-4">
             <Card class="flex flex-col p-2">
-              <span>Tasks</span>
-              <IconButton onClick={async () => {
-                await invoke("reload_resource");
-                setTasks(await invoke("get_tasks"));;
-              }}>
-                <Refresh />
-              </IconButton>
+              <div class="mb-4 flex items-center justify-between">
+                <span>Tasks</span>
+                <Show when={taskUpdating()} fallback={<IconButton onClick={async () => {
+                  setTaskUpdating(true);
+                  await invoke("reload_resources");
+                  setTasks(await invoke("get_tasks"));
+                  setTaskUpdating(false);
+                }}>
+                  <Refresh />
+                </IconButton>}>
+                  <CircularProgress color="inherit" />
+                </Show>
+              </div>
               <div class="flex flex-col overflow-y-auto gap-2 min-w-60">
                 <For each={tasks()}>
                   {(task) => (
