@@ -51,10 +51,11 @@ function App() {
     // 等待连接成功后再获取并绘制屏幕数据
     if (connected()) {
       console.time("aaa")
-      const imageData: Uint8Array = new Uint8Array(await invoke("get_screen"));
-      console.timeLog("aaa")
-      drawImageOnCanvas(imageData);
-      console.timeEnd("aaa")
+      // const imageData: Uint8Array = new Uint8Array(await invoke("get_screen"));
+      await invoke("get_screen");
+      // console.timeLog("aaa")
+      // drawImageOnCanvas(imageData);
+      // console.timeEnd("aaa")
     }
   }
 
@@ -134,10 +135,10 @@ function App() {
 
   // 监听后端更新画面信息, 再invoke到后端的一个command以获得图像数据
   async function eventListener() {
-    listen('analyze-result', event => {
+    listen('get-screen', async event => {
       console.log('Received event: ${event.payload}');
       // 从后端的另一个指令拿到图像数据
-      const imageData: Uint8Array = new Uint8Array(event.payload);
+      const imageData: Uint8Array = new Uint8Array(await invoke("serialization_picture"));
       // 在canvas上绘制图像
       drawImageOnCanvas(imageData);
 
