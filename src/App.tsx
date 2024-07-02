@@ -126,7 +126,7 @@ function App() {
   // 获得分析部署后的结果
   async function getAnalyzeResult() {
     const imageData: Uint8Array = new Uint8Array(await invoke("get_deploy_analyze_result"));
-    drawImageOnCanvas(imageData);
+    drawImage(imageData);
   }
 
   const ConnectView = () => <>
