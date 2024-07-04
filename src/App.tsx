@@ -37,12 +37,13 @@ function App() {
       setScreenUpdating(false);
 
       setTasks(await invoke("get_tasks"));
-
     }
+  });
+  createEffect(() => {
     if (images().length > 0) {
       drawImage(images()[currentImageIndex()]);
     }
-  });
+  })
   const onConnect = async () => {
     if (serial().length > 0 && !connected()) {
       try {
@@ -84,11 +85,11 @@ function App() {
       setLog((prevLog) => [...prevLog, event.payload]);
     })
     // 在前端 canvas 显示图片
-    unlistenLog = await listen('image_event', (event) => {
+    unlistenLog = await listen<any>('image_event', (event) => {
       const imageData: Uint8Array = new Uint8Array(event.payload);
       setImages((prevImages) => [...prevImages, imageData]);
       // 显示新添加的图像
-      setCurrentImageIndex(images().length);
+      setCurrentImageIndex(images().length - 1);
     })
   })
 
@@ -121,6 +122,13 @@ function App() {
       <Button variant="contained" onClick={onConnect} disabled={connecting()}>建立连接</Button>
     </div>
   </>
+
+  const onRunTask = async (task: string) => {
+    setCurrentTask(task);
+    setLog([]);
+    setImages([]);
+    await invoke("run_task", { name: task });
+  }
 
   return (
     <div class="flex flex-col w-full h-full max-h-full items-center p-4 box-border overflow-hidden">
@@ -176,11 +184,7 @@ function App() {
                   {(task) => (
                     <div class="flex justify-between items-center">
                       <span>{task}</span>
-                      <Button variant="contained" onClick={async () => {
-                        setCurrentTask(task);
-                        setLog([]);
-                        await invoke("run_task", { name: task });
-                      }}>执行任务</Button>
+                      <Button variant="contained" onClick={() => { onRunTask(task) }}>执行任务</Button>
                     </div>
                   )}
                 </For>
