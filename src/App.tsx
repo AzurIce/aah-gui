@@ -26,6 +26,10 @@ function App() {
   const [tasks, setTasks] = createSignal<string[]>([]);
   // 当前正在执行的任务
   const [currentTask, setCurrentTask] = createSignal("");
+  // 存储执行任务过程中接收到的图像数据
+  const [images, setImages] = createSignal<Uint8Array[]>([]);
+  // 存储当前显示的执行任务过程中的图像索引
+  const [currentImageIndex, setCurrentImageIndex] = createSignal(0);
 
   createEffect(async () => {
     if (connected()) {
@@ -35,7 +39,10 @@ function App() {
       setTasks(await invoke("get_tasks"));
 
     }
-  })
+    if (images().length > 0) {
+      drawImage(images()[currentImageIndex()]);
+    }
+  });
   const onConnect = async () => {
     if (serial().length > 0 && !connected()) {
       try {
@@ -78,9 +85,10 @@ function App() {
     })
     // 在前端 canvas 显示图片
     unlistenLog = await listen('image_event', (event) => {
-
       const imageData: Uint8Array = new Uint8Array(event.payload);
-      drawImage(imageData);
+      setImages((prevImages) => [...prevImages, imageData]);
+      // 显示新添加的图像
+      setCurrentImageIndex(images().length);
     })
   })
 
@@ -131,14 +139,21 @@ function App() {
 
             </div>
             <canvas ref={canvas} class="w-full" />
+            <Show when={images().length > 0} fallback={<></>}>
+              <div>
+                <Button variant="outlined" onClick={() => setCurrentImageIndex((i) => Math.max(i - 1, 0))}>上一张</Button>
+                <Button variant="outlined" onClick={() => setCurrentImageIndex((i) => Math.min(i + 1, images().length - 1))}>下一张</Button>
+              </div>
+            </Show>
+
             {/* 打印执行信息的地方 */}
-            <Card class="w-11/12 h-64">
+            <div class="w-11/12 pl-4 h-full">
               <h1>任务执行情况：</h1>
               <div>正在执行的任务是：{currentTask()}</div>
               <div>
                 <For each={log()}>{(logItem) => <div>{logItem}</div>}</For>
               </div>
-            </Card>
+            </div>
           </Card>
           {/* Right part */}
           <div class="h-full flex flex-col gap-4">
