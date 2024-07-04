@@ -21,7 +21,11 @@ function App() {
   // 更新任务状态
   const [taskUpdating, setTaskUpdating] = createSignal(false);
   // 执行任务情况的日志信息
-  const [log, setLog] = createSignal<string>("");
+  const [log, setLog] = createSignal<string[]>([]);
+  // 任务列表（字符串型数组）
+  const [tasks, setTasks] = createSignal<string[]>([]);
+  // 当前正在执行的任务
+  const [currentTask, setCurrentTask] = createSignal("");
 
   createEffect(async () => {
     if (connected()) {
@@ -45,8 +49,6 @@ function App() {
       }
     }
   }
-  // 任务列表（字符串型数组）
-  const [tasks, setTasks] = createSignal<string[]>([]);
 
   // 将 imageData 绘制在 canvas 上
   const drawImage = async (imageData: Uint8Array) => {
@@ -72,7 +74,7 @@ function App() {
   onMount(async () => {
     // 在前端 Card 显示日志信息
     unlistenLog = await listen<string>('log_event', (event) => {
-      setLog(event.payload);
+      setLog((prevLog) => [...prevLog, event.payload]);
     })
     // 在前端 canvas 显示图片
     unlistenLog = await listen('image_event', (event) => {
@@ -80,9 +82,8 @@ function App() {
       const imageData: Uint8Array = new Uint8Array(event.payload);
       drawImage(imageData);
     })
-
-
   })
+
   // 清理监听器
   onCleanup(() => {
     if (unlistenLog) {
@@ -132,8 +133,11 @@ function App() {
             <canvas ref={canvas} class="w-full" />
             {/* 打印执行信息的地方 */}
             <Card class="w-11/12 h-64">
-              <div>任务执行情况：</div>
-              <div>{log()}</div>
+              <h1>任务执行情况：</h1>
+              <div>正在执行的任务是：{currentTask()}</div>
+              <div>
+                <For each={log()}>{(logItem) => <div>{logItem}</div>}</For>
+              </div>
             </Card>
           </Card>
           {/* Right part */}
@@ -158,6 +162,8 @@ function App() {
                     <div class="flex justify-between items-center">
                       <span>{task}</span>
                       <Button variant="contained" onClick={async () => {
+                        setCurrentTask(task);
+                        setLog([]);
                         await invoke("run_task", { name: task });
                       }}>执行任务</Button>
                     </div>

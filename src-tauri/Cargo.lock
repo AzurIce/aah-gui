@@ -5,7 +5,7 @@ version = 3
 [[package]]
 name = "aah-core"
 version = "0.1.0"
-source = "git+https://github.com/AzurIce/azur-arknights-helper.git#41005d8e24d0be4bc2e15cc250555f1d7611967d"
+source = "git+https://github.com/AzurIce/azur-arknights-helper.git#01528986d06772bb66480cd4d38761764aadd46b"
 dependencies = [
  "aah-cv",
  "aah-resource",
@@ -17,10 +17,11 @@ dependencies = [
  "nalgebra 0.32.6",
  "ndarray",
  "nshare",
+ "ocrs",
  "rand 0.8.5",
  "reqwest 0.11.27",
  "rten",
- "rten-tensor",
+ "rten-tensor 0.1.0",
  "rust-embed",
  "serde",
  "serde_json",
@@ -30,7 +31,7 @@ dependencies = [
 [[package]]
 name = "aah-cv"
 version = "0.1.0"
-source = "git+https://github.com/AzurIce/azur-arknights-helper.git#41005d8e24d0be4bc2e15cc250555f1d7611967d"
+source = "git+https://github.com/AzurIce/azur-arknights-helper.git#01528986d06772bb66480cd4d38761764aadd46b"
 dependencies = [
  "bytemuck",
  "csv",
@@ -69,7 +70,7 @@ dependencies = [
 [[package]]
 name = "aah-resource"
 version = "0.1.0"
-source = "git+https://github.com/AzurIce/azur-arknights-helper.git#41005d8e24d0be4bc2e15cc250555f1d7611967d"
+source = "git+https://github.com/AzurIce/azur-arknights-helper.git#01528986d06772bb66480cd4d38761764aadd46b"
 dependencies = [
  "nalgebra 0.33.0",
  "serde",
@@ -3252,6 +3253,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "ocrs"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04022287d9279e74c3d718cc7fd06fa57b48998bb2a24eb6e8582934220212a0"
+dependencies = [
+ "anyhow",
+ "rayon",
+ "rten",
+ "rten-imageproc",
+ "rten-tensor 0.10.0",
+ "thiserror",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "once_cell"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4126,18 +4142,36 @@ dependencies = [
 
 [[package]]
 name = "rten"
-version = "0.2.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6a6dac3f93209d93dbd51b9f0fc0242a7efd2cc5d4dfb187060acca12fae481"
+checksum = "09c030cdf90e64c5eeeba389ca59da14b0a106b1b8366c15591251bb6a2e777f"
 dependencies = [
  "flatbuffers",
  "libm",
+ "num_cpus",
  "rayon",
- "rten-tensor",
+ "rten-simd",
+ "rten-tensor 0.10.0",
  "rten-vecmath",
+ "rustc-hash",
  "smallvec",
  "wasm-bindgen",
 ]
+
+[[package]]
+name = "rten-imageproc"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ba61077269b2b2c90445bfd55fb798dcd544b56e7fd78faaea51940b8e429ae"
+dependencies = [
+ "rten-tensor 0.10.0",
+]
+
+[[package]]
+name = "rten-simd"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8eb16da64e0d08ce56dc17d8304ab2da541176ee30430c0b0e581a7841a660ae"
 
 [[package]]
 name = "rten-tensor"
@@ -4149,10 +4183,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "rten-vecmath"
-version = "0.1.1"
+name = "rten-tensor"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fdf88099bfb2abd791a65fbb2d4e6415630d307a54dcb3e47d52758f895d1a0c"
+checksum = "52f5e53d2e43bb736e89e4ea41b707e024190f8ba47c3eddf5a3c2d022089909"
+dependencies = [
+ "smallvec",
+]
+
+[[package]]
+name = "rten-vecmath"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56eccc46a7e7a2df2cebb7ba95e613a01942a01e0f2f2f7d6122176ab7372e9f"
+dependencies = [
+ "rten-simd",
+]
 
 [[package]]
 name = "rust-embed"
