@@ -65,17 +65,31 @@ function App() {
     setScreenUpdating(false);
   }
 
-  // 监听后端发来的日志信息，并显示在前端对应的页面上
-  let unlisten: UnlistenFn | null;
+  // 监听后端发来的日志信息
+  let unlistenLog: UnlistenFn | null;
+  // 监听后端发来的图片信息
+  let UnlistenImage: UnlistenFn | null;
   onMount(async () => {
-    unlisten = await listen<string>('log_event', (event) => {
+    // 在前端 Card 显示日志信息
+    unlistenLog = await listen<string>('log_event', (event) => {
       setLog(event.payload);
     })
+    // 在前端 canvas 显示图片
+    unlistenLog = await listen('image_event', (event) => {
+
+      const imageData: Uint8Array = new Uint8Array(event.payload);
+      drawImage(imageData);
+    })
+
+
   })
   // 清理监听器
   onCleanup(() => {
-    if (unlisten) {
-      unlisten();
+    if (unlistenLog) {
+      unlistenLog();
+    }
+    if (UnlistenImage) {
+      UnlistenImage();
     }
   })
 

@@ -2,7 +2,7 @@ use crate::state::core_instance;
 use aah_core::task::TaskEvt;
 use aah_core::AAH;
 use image::{ImageBuffer, ImageFormat};
-use std::{io::Cursor, path::Path, time::Instant};
+use std::{fmt::format, io::Cursor, path::Path, time::Instant};
 use tauri::{Manager, Window};
 
 // 连接设备
@@ -12,11 +12,18 @@ pub async fn connect(serial: String, window: Window) -> Result<(), String> {
     // 定义任务事件回调函数
     let on_task_env = move |event: TaskEvt| {
         match event {
+            // 使用Tauri中的emit方法将信息发送到前端
             TaskEvt::Log(message) => {
-                // 使用Tauri中的emit方法将日志信息发送到前端
                 window.emit("log_event", message).unwrap();
             }
-            TaskEvt::AnnotatedImg(img) => {}
+            TaskEvt::AnnotatedImg(img) => {
+                let image = img;
+                let mut buf = Vec::new();
+                image
+                    .write_to(&mut Cursor::new(&mut buf), ImageFormat::Png)
+                    .map_err(|e| format!("编码图像失败: {:?}", e));
+                window.emit("image_event", buf).unwrap();
+            }
         }
     };
     // resources绝对路径
@@ -84,10 +91,7 @@ pub async fn get_deploy_analyze_result(window: Window) -> Result<tauri::ipc::Res
 
 // 获得屏幕画面
 #[tauri::command]
-pub async fn get_screen(
-    windows: tauri::Window,
-    request: tauri::ipc::Request<'_>,
-) -> Result<tauri::ipc::Response, String> {
+pub async fn get_screen(request: tauri::ipc::Request<'_>) -> Result<tauri::ipc::Response, String> {
     // ! cost 818.778076171875 ms (total) =  700ms + 100ms(Serialize ad Deserialize and transport)
     // ) -> Result<Vec<u8>, String> { // ! cost 1276.532958984375 ms (total) = 700ms + 400ms(Serialize ad Deserialize and transport)
     let start = Instant::now();
@@ -115,8 +119,12 @@ mod test {
 
     #[test]
     fn screenshot() {
-        let mut core =
-            AAH::connect("127.0.0.1:16384", "../../azur-arknights-helper\\resources", |_|{}).unwrap();
+        let mut core = AAH::connect(
+            "127.0.0.1:16384",
+            "../../azur-arknights-helper\\resources",
+            |_| {},
+        )
+        .unwrap();
 
         let screen = core.get_screen().unwrap();
         // resources绝对路径
