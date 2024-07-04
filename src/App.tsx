@@ -2,17 +2,9 @@ import { createSignal, For, createEffect, onMount, onCleanup, Show } from "solid
 import { UnlistenFn, emit, listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { TextField, Button, IconButton, Card, CircularProgress } from "@suid/material";
-import {
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-} from "@suid/material";
 import "./App.css";
 import { Refresh } from "@suid/icons-material";
+import { event } from "@tauri-apps/api";
 
 const local = "127.0.0.1:16384";
 
@@ -28,6 +20,8 @@ function App() {
   const [screenUpdating, setScreenUpdating] = createSignal(false);
   // 更新任务状态
   const [taskUpdating, setTaskUpdating] = createSignal(false);
+  // 执行任务情况的日志信息
+  const [log, setLog] = createSignal<string>("");
 
   createEffect(async () => {
     if (connected()) {
@@ -71,16 +65,19 @@ function App() {
     setScreenUpdating(false);
   }
 
-  // screen_updated 事件
-  // let unlisten: UnlistenFn | null;
-  // onMount(async () => {
-  //   unlisten = await listen('screen_updated', updateScreen)
-  // })
-  // onCleanup(() => {
-  //   if (unlisten) {
-  //     unlisten();
-  //   }
-  // })
+  // 监听后端发来的日志信息，并显示在前端对应的页面上
+  let unlisten: UnlistenFn | null;
+  onMount(async () => {
+    unlisten = await listen<string>('log_event', (event) => {
+      setLog(event.payload);
+    })
+  })
+  // 清理监听器
+  onCleanup(() => {
+    if (unlisten) {
+      unlisten();
+    }
+  })
 
   // 获得分析部署后的结果
   async function getAnalyzeResult() {
@@ -107,7 +104,7 @@ function App() {
       <Show when={connected()} fallback={<ConnectView />}>
         <div class="flex-1 flex w-full max-h-full box-border gap-4">
           {/* Screen part */}
-          <Card class="flex-1 flex flex-col gap-2 h-full items-start justify-stretch">
+          <Card class="flex-1 flex flex-col gap-2 h-full items-center justify-stretch">
             <div class="flex items-center justify-between border-box ml-2 mr-2">
               <span>Screen</span>
 
@@ -119,6 +116,11 @@ function App() {
 
             </div>
             <canvas ref={canvas} class="w-full" />
+            {/* 打印执行信息的地方 */}
+            <Card class="w-11/12 h-64">
+              <div>任务执行情况：</div>
+              <div>{log()}</div>
+            </Card>
           </Card>
           {/* Right part */}
           <div class="h-full flex flex-col gap-4">
@@ -149,7 +151,7 @@ function App() {
                 </For>
               </div>
             </Card>
-            <Card class="p-2 flex flex-col gap-2">
+            <Card class="p-4 flex flex-none gap-24 items-center">
               <span>Analyzers</span>
               <Button variant="contained" onClick={getAnalyzeResult}>分析部署</Button>
             </Card>

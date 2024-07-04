@@ -17,7 +17,6 @@ fn main() {
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             greet,
-            get_image,
             connect,
             get_screen,
             get_tasks,

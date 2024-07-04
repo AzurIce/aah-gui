@@ -1,20 +1,32 @@
-use std::{io::Cursor, path::Path, time::Instant};
-
 use crate::state::core_instance;
+use aah_core::task::TaskEvt;
 use aah_core::AAH;
 use image::{ImageBuffer, ImageFormat};
-use tauri::Window;
+use std::{io::Cursor, path::Path, time::Instant};
+use tauri::{Manager, Window};
 
+// 连接设备
 #[tauri::command]
-pub async fn connect(serial: String) -> Result<(), String> {
+pub async fn connect(serial: String, window: Window) -> Result<(), String> {
     let mut core = core_instance().lock().unwrap();
+    // 定义任务事件回调函数
+    let on_task_env = move |event: TaskEvt| {
+        match event {
+            TaskEvt::Log(message) => {
+                // 使用Tauri中的emit方法将日志信息发送到前端
+                window.emit("log_event", message).unwrap();
+            }
+            TaskEvt::AnnotatedImg(img) => {}
+        }
+    };
     // resources绝对路径
-    let connected_aah = AAH::connect(serial, "../../azur-arknights-helper/resources")
+    let connected_aah = AAH::connect(serial, "../../azur-arknights-helper/resources", on_task_env)
         .map_err(|err| format!("{}", err))?;
     *core = Some(connected_aah);
     Ok(())
 }
 
+// 获得任务名称
 #[tauri::command]
 pub async fn get_tasks() -> Result<Vec<String>, String> {
     let mut core = core_instance().lock().unwrap();
@@ -28,6 +40,7 @@ pub async fn get_tasks() -> Result<Vec<String>, String> {
     Ok(tasks)
 }
 
+// 重新加载资源
 #[tauri::command]
 pub async fn reload_resources() -> Result<(), String> {
     let mut core = core_instance().lock().unwrap();
@@ -39,6 +52,7 @@ pub async fn reload_resources() -> Result<(), String> {
     core.reload_resources()
 }
 
+// 执行任务
 #[tauri::command]
 pub async fn run_task(name: String) -> Result<(), String> {
     let mut core = core_instance().lock().unwrap();
@@ -50,15 +64,16 @@ pub async fn run_task(name: String) -> Result<(), String> {
     core.run_task(name)
 }
 
+// 获得部署分析结果
 #[tauri::command]
-pub async fn get_deploy_analyze_result(windows: Window) -> Result<tauri::ipc::Response, String> {
+pub async fn get_deploy_analyze_result(window: Window) -> Result<tauri::ipc::Response, String> {
     let mut core = core_instance().lock().unwrap();
     let core = core.as_mut().ok_or("No device connected".to_string())?;
 
     let res = core.analyze_deploy().unwrap();
 
-    let image = res.res_screen;
-    
+    let image = res.annotated_screen;
+
     let mut buf = Vec::new();
     image
         .write_to(&mut Cursor::new(&mut buf), ImageFormat::Png)
@@ -67,83 +82,31 @@ pub async fn get_deploy_analyze_result(windows: Window) -> Result<tauri::ipc::Re
     Ok(tauri::ipc::Response::new(buf))
 }
 
+// 获得屏幕画面
 #[tauri::command]
 pub async fn get_screen(
     windows: tauri::Window,
     request: tauri::ipc::Request<'_>,
-) -> Result<tauri::ipc::Response, String> { // ! cost 818.778076171875 ms (total) =  700ms + 100ms(Serialize ad Deserialize and transport)
-// ) -> Result<Vec<u8>, String> { // ! cost 1276.532958984375 ms (total) = 700ms + 400ms(Serialize ad Deserialize and transport)
+) -> Result<tauri::ipc::Response, String> {
+    // ! cost 818.778076171875 ms (total) =  700ms + 100ms(Serialize ad Deserialize and transport)
+    // ) -> Result<Vec<u8>, String> { // ! cost 1276.532958984375 ms (total) = 700ms + 400ms(Serialize ad Deserialize and transport)
     let start = Instant::now();
     let mut core = core_instance().lock().unwrap();
     let core = core.as_mut().ok_or("No device connected".to_string())?;
 
     // ! screenshot 700ms
-    let screen = core.get_raw_screen()?;  // 假设 get_screen 返回的是 DynamicImage 类型
-    
+    let screen = core.get_raw_screen()?; // 假设 get_screen 返回的是 DynamicImage 类型
+
     // let mut buf = Vec::new();
     // screen
     //     .write_to(&mut Cursor::new(&mut buf), ImageFormat::Png)
     //     .map_err(|e| format!("编码图像失败: {:?}", e))?;
     println!("elapsed {:?}", start.elapsed());
-    
+
     // windows.emit("get-screen", "get-screen-succeed");
     // Ok(())
     Ok(tauri::ipc::Response::new(screen))
     // Ok(screen)
-}
-
-#[tauri::command]
-pub async fn get_image() -> Result<Vec<u8>, String> {
-    let imgx = 800;
-    let imgy = 800;
-
-    let scalex = 3.0 / imgx as f32;
-    let scaley = 3.0 / imgy as f32;
-
-    // Create a new ImgBuf with width: imgx and height: imgy
-    let mut imgbuf = ImageBuffer::new(imgx, imgy);
-
-    // Iterate over the coordinates and pixels of the image
-    for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
-        let r = (0.3 * x as f32) as u8;
-        let b = (0.3 * y as f32) as u8;
-        *pixel = image::Rgb([r, 0, b]);
-    }
-
-    // A redundant loop to demonstrate reading image data
-    for x in 0..imgx {
-        for y in 0..imgy {
-            let cx = y as f32 * scalex - 1.5;
-            let cy = x as f32 * scaley - 1.5;
-
-            let c = num_complex::Complex::new(-0.4, 0.6);
-            let mut z = num_complex::Complex::new(cx, cy);
-
-            let mut i = 0;
-            while i < 255 && z.norm() <= 2.0 {
-                z = z * z + c;
-                i += 1;
-            }
-
-            let pixel = imgbuf.get_pixel_mut(x, y);
-            let image::Rgb(data) = *pixel;
-            *pixel = image::Rgb([data[0], i as u8, data[2]]);
-        }
-    }
-
-    // 创建一个内存缓冲区，用于写入图像数据
-    let mut buf = Vec::new();
-
-    // 使用 Cursor 包装 buf，使其实现了 Seek trait
-    let mut cursor = Cursor::new(&mut buf);
-
-    // 将图像数据以 JPEG 格式写入到 buf 中
-    imgbuf
-        .write_to(&mut cursor, ImageFormat::Bmp)
-        .map_err(|e| format!("编码图像失败: {:?}", e))?;
-
-    // 将包含图像数据的 Vec<u8> 返回给前端
-    Ok(buf)
 }
 
 #[cfg(test)]
@@ -152,37 +115,13 @@ mod test {
 
     #[test]
     fn screenshot() {
-        let mut core = AAH::connect(
-            "127.0.0.1:16384",
-            "../../azur-arknights-helper\\resources",
-        )
-        .unwrap();
+        let mut core =
+            AAH::connect("127.0.0.1:16384", "../../azur-arknights-helper\\resources", |_|{}).unwrap();
 
         let screen = core.get_screen().unwrap();
         // resources绝对路径
         let dir =
             Path::new("E:\\summer\\azur-arknights-helper\\resources\\templates\\MUMU-1920x1080");
         screen.save(dir.join("choose-time.png")).unwrap();
-    }
-
-    #[test]
-    fn foo() {
-        let serial = String::from("127.0.0.1:16384");
-
-        // 调用 connect 函数进行连接
-        let result = connect(serial.clone());
-
-        // 验证连接操作的结果
-        // match result {
-        //     Ok(()) => {
-        //         println!("Device connected successfully!");
-        //         // 这里可以添加更多的断言或验证连接后的操作
-        //     }
-        //     Err(err) => {
-        //         eprintln!("Failed to connect to device: {}", err);
-        //         // 在连接失败的情况下，可以记录错误信息或者处理其他逻辑
-        //         panic!("Test failed: Connection error");
-        //     }
-        // }
     }
 }
