@@ -155,13 +155,15 @@ function App() {
             </Show>
 
             {/* 打印执行信息的地方 */}
-            <div class="w-11/12 pl-4 h-full">
-              <h1>任务执行情况：</h1>
-              <div>正在执行的任务是：{currentTask()}</div>
-              <div>
-                <For each={log()}>{(logItem) => <div>{logItem}</div>}</For>
+            <Card class="w-11/12 pl-4 h-full m-2 flex-1 flex">
+              <div class="overflow-y-auto w-full">
+                <span>任务执行情况：</span>
+                <div>正在执行的任务是：{currentTask()}</div>
+                <code>
+                  <For each={log()}>{(logItem) => <div>{logItem}</div>}</For>
+                </code>
               </div>
-            </div>
+            </Card>
           </Card>
           {/* Right part */}
           <div class="h-full flex flex-col gap-4">

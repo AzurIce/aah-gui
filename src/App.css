@@ -11,3 +11,6 @@ html {
   height: 100%;
   overflow: hidden;
 }
+code {
+  font-family: "Consolas", "Clear Sans", "Helvetica Neue", Helvetica, Arial, 'Segoe UI Emoji', sans-serif;
+}
