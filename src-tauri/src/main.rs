@@ -23,6 +23,7 @@ fn main() {
             run_task,
             get_deploy_analyze_result,
             reload_resources,
+            start_battle_analyzer,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

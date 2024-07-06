@@ -53,6 +53,18 @@ pub async fn connect(serial: String, window: Window) -> Result<(), String> {
 
 // 获得任务名称
 #[tauri::command]
+pub async fn start_battle_analyzer() -> Result<, String>{
+    let mut core = core_instance().lock().unwrap();
+    if core.is_none() {
+        return Err("No device connected".to_string());
+    }
+    let core = core.as_mut().unwrap();
+
+    core.start_battle_analyzer();
+}
+
+// 获得任务名称
+#[tauri::command]
 pub async fn get_tasks() -> Result<Vec<String>, String> {
     let mut core = core_instance().lock().unwrap();
     if core.is_none() {
