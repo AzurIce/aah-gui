@@ -19,26 +19,20 @@ pub async fn connect(serial: String, window: Window) -> Result<(), String> {
             TaskEvt::AnnotatedImg(img) => {
                 let image = img;
                 let mut buf = Vec::new();
-                image
+                let _ = image
                     .write_to(&mut Cursor::new(&mut buf), ImageFormat::Png)
                     .map_err(|e| format!("编码图像失败: {:?}", e));
                 window.emit("image_event", buf).unwrap();
             }
             TaskEvt::BattleAnalyzerRes(analyzer_output) => {
-                let battleState = analyzer_output.battle_state;
-                window.emit("battleState", battleState).unwrap();
-
+                let battle_state = analyzer_output.battle_state;
+                window.emit("battleState", battle_state).unwrap();
+                
+                println!("{:?}", analyzer_output.deploy_cards);
                 // let deploy_cards = analyzer_output.deploy_cards;
 
                 for deploy_card in analyzer_output.deploy_cards {
-                    let oper_name = deploy_card.oper_name;
-                    let rect = deploy_card.rect;
-                    let available = deploy_card.available;
-
-                    // 发送单个 DeployCard 数据到前端
-                    window.emit("oper_name", oper_name).unwrap();
-                    window.emit("rect", rect).unwrap();
-                    window.emit("available", available).unwrap();
+                    window.emit("oper_info", deploy_card).unwrap();
                 }
             }
         }

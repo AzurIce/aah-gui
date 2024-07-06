@@ -12,7 +12,7 @@ function App() {
   let canvas: HTMLCanvasElement | undefined;
 
   // 设备序列号
-  const [serial, setSerial] = createSignal("127.0.0.1:5555");
+  const [serial, setSerial] = createSignal("127.0.0.1:16384");
   // 当前连接状态
   const [connected, setConnected] = createSignal(false);
   const [connecting, setConnecting] = createSignal(false);
@@ -33,7 +33,7 @@ function App() {
   // 当前战斗状态
   const [battleState, setBattleState] = createSignal("");
   // 干员相关信息
-  const [operInfos, setOperInfos] = createSignal<{ name: string, rect: { x: number, y: number, width: number, height: number }, available: boolean }[]>([]);
+  const [operInfos, setOperInfos] = createSignal<{ oper_name: string, rect: { x: number, y: number, width: number, height: number }, available: boolean }[]>([]);
   // 分析战斗过程的状态
   const [battleAnalyzing, setBattleAnalyzing] = createSignal(false);
 
@@ -45,11 +45,13 @@ function App() {
       setTasks(await invoke("get_tasks"));
     }
   });
+
   createEffect(() => {
     if (images().length > 0) {
       drawImage(images()[currentImageIndex()]);
     }
   })
+
   const onConnect = async () => {
     if (serial().length > 0 && !connected()) {
       try {
@@ -88,12 +90,8 @@ function App() {
 
   // 后端发的战斗状态
   let unlistenBattleState: UnlistenFn | null;
-  // 后端发的干员名
-  let unlistenOperName: UnlistenFn | null;
-  // 后端发的干员位置信息
-  let unlistenOperRect: UnlistenFn | null;
-  // 侯丹发的干员状态信息
-  let unlistenOperAvai: UnlistenFn | null;
+  let unlistenOperInfo: UnlistenFn | null;
+
   onMount(async () => {
     // 在前端 Card 显示日志信息
     unlistenLog = await listen<string>('log_event', (event) => {
@@ -109,40 +107,18 @@ function App() {
 
     // 接收战斗状态信息
     unlistenBattleState = await listen('battleState', (event) => {
+      console.log(event.payload)
       setBattleState(event.payload);
     })
 
-    // 接收干员名信息
-    unlistenOperName = await listen<string>('oper_name', (event) => {
-      const oper_name = event.payload;
-      setOperInfos((prevInfos) => {
-        const newInfos = [...prevInfos];
-        newInfos[newInfos.length - 1].name = oper_name;
-        return newInfos;
-      });
-    })
-
-    // 接收干员位置信息
-    unlistenOperRect = await listen<{ x: number, y: number, width: number, height: number }>('rect', (event) => {
-      const rect = event.payload;
-      setOperInfos((prevInfos) => {
-        const newInfos = [...prevInfos];
-        newInfos[newInfos.length - 1].rect = rect;
-        return newInfos;
-      })
-    })
-
-    // 接收干员状态信息
-    unlistenOperAvai = await listen<boolean>('available', (event) => {
-      const available = event.payload;
-      setOperInfos((prevInfos) => {
-        const newInfos = [...prevInfos];
-        newInfos[newInfos.length - 1].available = available;
-        return newInfos;
-      });
+    // 接收干员信息
+    unlistenOperInfo = await listen<{ oper_name: string, rect: { x: number, y: number, width: number, height: number }, available: boolean }>('oper_info', (event) => {
+      const oper_info = event.payload;
+      setOperInfos((prevInfos) => [...prevInfos, oper_info]);
     })
 
   })
+
 
   // 清理监听器
   onCleanup(() => {
@@ -155,14 +131,8 @@ function App() {
     if (unlistenBattleState) {
       unlistenBattleState();
     }
-    if (unlistenOperName) {
-      unlistenOperName();
-    }
-    if (unlistenOperRect) {
-      unlistenOperRect();
-    }
-    if (unlistenOperAvai) {
-      unlistenOperAvai();
+    if (unlistenOperInfo) {
+      unlistenOperInfo();
     }
   })
 
@@ -270,15 +240,18 @@ function App() {
       <Button variant="contained" onClick={async () => {
         setBattleAnalyzing(true);
         await invoke("start_battle_analyzer");
+        console.log('444')
+        console.log(operInfos());
         setBattleAnalyzing(false);
       }} disabled={battleAnalyzing()}>Rock and Roll!</Button>
 
       <div>当前战斗状态：{battleState()}</div>
       <div>当前干员状态：</div>
+
       <For each={operInfos()}>
         {(operInfo) => (
-          <div>干员名称：{operInfo.name} 干员位置：({operInfo.rect.x}, {operInfo.rect.y}, {operInfo.rect.width}, {operInfo.rect.height})
-          干员状态：{operInfo.available?"可用":"不可用"}
+          <div>
+            干员名称：{operInfo.oper_name} 干员位置：({operInfo.rect.x}, {operInfo.rect.y}, {operInfo.rect.width}, {operInfo.rect.height}) 干员状态：{operInfo.available?"可用":"不可用"}
           </div>
         )}
       </For>
@@ -306,80 +279,7 @@ function App() {
         </Show>
       </Show>
     </div>
-
-
-
-
-    // <div class="flex flex-col w-full h-full max-h-full items-center p-4 box-border overflow-hidden">
-    //   <Show when={connected()} fallback={<ConnectView />}>
-    //     <div class="flex-1 flex w-full max-h-full box-border gap-4">
-    //       {/* Screen part */}
-    //       <Card class="flex-1 flex flex-col gap-2 h-full items-center justify-stretch">
-    //         <div class="flex items-center justify-between border-box ml-2 mr-2">
-    //           <span>Screen</span>
-
-    //           <Show when={screenUpdating()} fallback={<IconButton onClick={updateScreen}>
-    //             <Refresh />
-    //           </IconButton>}>
-    //             <CircularProgress color="inherit" />
-    //           </Show>
-
-    //         </div>
-    //         <canvas ref={canvas} class="w-full" />
-    //         <Show when={images().length > 0} fallback={<></>}>
-    //           <div>
-    //             <Button variant="outlined" onClick={() => setCurrentImageIndex((i) => Math.max(i - 1, 0))}>上一张</Button>
-    //             <Button variant="outlined" onClick={() => setCurrentImageIndex((i) => Math.min(i + 1, images().length - 1))}>下一张</Button>
-    //           </div>
-    //         </Show>
-
-    //         {/* 打印执行信息的地方 */}
-    //         <Card class="w-11/12 pl-4 h-full m-2 flex-1 flex">
-    //           <div class="overflow-y-auto w-full">
-    //             <span>任务执行情况：</span>
-    //             <div>正在执行的任务是：{currentTask()}</div>
-    //             <code>
-    //               <For each={log()}>{(logItem) => <div>{logItem}</div>}</For>
-    //             </code>
-    //           </div>
-    //         </Card>
-    //       </Card>
-    //       {/* Right part */}
-    //       <div class="h-full flex flex-col gap-4">
-    //         <Card class="flex flex-col p-2">
-    //           <div class="mb-4 flex items-center justify-between">
-    //             <span>Tasks</span>
-    //             <Show when={taskUpdating()} fallback={<IconButton onClick={async () => {
-    //               setTaskUpdating(true);
-    //               await invoke("reload_resources");
-    //               setTasks(await invoke("get_tasks"));
-    //               setTaskUpdating(false);
-    //             }}>
-    //               <Refresh />
-    //             </IconButton>}>
-    //               <CircularProgress color="inherit" />
-    //             </Show>
-    //           </div>
-    //           <div class="flex flex-col overflow-y-auto gap-2 min-w-60">
-    //             <For each={tasks()}>
-    //               {(task) => (
-    //                 <div class="flex justify-between items-center">
-    //                   <span>{task}</span>
-    //                   <Button variant="contained" onClick={() => { onRunTask(task) }}>执行任务</Button>
-    //                 </div>
-    //               )}
-    //             </For>
-    //           </div>
-    //         </Card>
-    //         <Card class="p-4 flex flex-none gap-24 items-center">
-    //           <span>Analyzers</span>
-    //           <Button variant="contained" onClick={getAnalyzeResult}>分析部署</Button>
-    //         </Card>
-    //       </div>
-    //     </div>
-    //   </Show>
-    // </div>
   );
-}
+};
 
 export default App;
