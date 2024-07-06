@@ -105,6 +105,7 @@ function App() {
     // 接收信息
     unlistenBattleState = await listen('battleState', (event) => {
       console.log(event.payload);
+      setBattleState(event.payload);
     })
 
   })
