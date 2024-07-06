@@ -34,11 +34,11 @@ pub async fn connect(serial: String, window: Window) -> Result<(), String> {
                     let oper_name = deploy_card.oper_name;
                     let rect = deploy_card.rect;
                     let available = deploy_card.available;
-    
+
                     // 发送单个 DeployCard 数据到前端
-                    window.emit("oper_name",oper_name).unwrap();
-                    window.emit("rect",rect).unwrap();
-                    window.emit("available",available).unwrap();
+                    window.emit("oper_name", oper_name).unwrap();
+                    window.emit("rect", rect).unwrap();
+                    window.emit("available", available).unwrap();
                 }
             }
         }
@@ -50,8 +50,7 @@ pub async fn connect(serial: String, window: Window) -> Result<(), String> {
     Ok(())
 }
 
-
-// 获得任务名称
+// 开始战斗分析
 #[tauri::command]
 pub async fn start_battle_analyzer() -> Result<(), String> {
     let mut core = core_instance().lock().unwrap();

@@ -1,7 +1,7 @@
 import { createSignal, For, createEffect, onMount, onCleanup, Show } from "solid-js";
 import { UnlistenFn, emit, listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { TextField, Button, IconButton, Card, CircularProgress } from "@suid/material";
+import { TextField, Button, IconButton, Card, CircularProgress, AppBar, Toolbar } from "@suid/material";
 import "./App.css";
 import { Refresh } from "@suid/icons-material";
 import { event } from "@tauri-apps/api";
@@ -30,6 +30,8 @@ function App() {
   const [images, setImages] = createSignal<Uint8Array[]>([]);
   // 存储当前显示的执行任务过程中的图像索引
   const [currentImageIndex, setCurrentImageIndex] = createSignal(0);
+  // 
+  const [battleState, setBattleState] = createSignal("");
 
   createEffect(async () => {
     if (connected()) {
@@ -79,18 +81,32 @@ function App() {
   let unlistenLog: UnlistenFn | null;
   // 监听后端发来的图片信息
   let UnlistenImage: UnlistenFn | null;
+
+  // 后端发的战斗状态
+  let unlistenBattleState: UnlistenFn | null;
+  // 后端发的干员名
+  let unlistenOperName: UnlistenFn | null;
+  // 后端发的干员位置信息
+  let unlistenOperRect: UnlistenFn | null;
+  // 侯丹发的干员状态信息
+  let unlistenOperAvai: UnlistenFn | null;
   onMount(async () => {
     // 在前端 Card 显示日志信息
     unlistenLog = await listen<string>('log_event', (event) => {
       setLog((prevLog) => [...prevLog, event.payload]);
     })
     // 在前端 canvas 显示图片
-    unlistenLog = await listen<any>('image_event', (event) => {
+    UnlistenImage = await listen<any>('image_event', (event) => {
       const imageData: Uint8Array = new Uint8Array(event.payload);
       setImages((prevImages) => [...prevImages, imageData]);
       // 显示新添加的图像
       setCurrentImageIndex(images().length - 1);
     })
+    // 接收信息
+    unlistenBattleState = await listen('battleState', (event) => {
+      console.log(event.payload);
+    })
+
   })
 
   // 清理监听器
@@ -130,76 +146,180 @@ function App() {
     await invoke("run_task", { name: task });
   }
 
+  // 当前显示的页面
+  const [mainSelected, setMainSelected] = createSignal(true);
+  const [battleAnalyzeSelected, setBattleAnalyzeSelected] = createSignal(false);
+
+  // 主页面
+  const MainView = () => <>
+    <div class="flex-1 flex w-full max-h-full box-border gap-4">
+      {/* Screen part */}
+      <Card class="flex-1 flex flex-col gap-2 h-full items-center justify-stretch">
+        <div class="flex items-center justify-between border-box ml-2 mr-2">
+          <span>Screen</span>
+
+          <Show when={screenUpdating()} fallback={<IconButton onClick={updateScreen}>
+            <Refresh />
+          </IconButton>}>
+            <CircularProgress color="inherit" />
+          </Show>
+        </div>
+        <canvas ref={canvas} class="w-full" />
+        <Show when={images().length > 0} fallback={<></>}>
+          <div>
+            <Button variant="outlined" onClick={() => setCurrentImageIndex((i) => Math.max(i - 1, 0))}>上一张</Button>
+            <Button variant="outlined" onClick={() => setCurrentImageIndex((i) => Math.min(i + 1, images().length - 1))}>下一张</Button>
+          </div>
+        </Show>
+
+        {/* 打印执行信息的地方 */}
+        <Card class="w-11/12 pl-4 h-full m-2 flex-1 flex">
+          <div class="overflow-y-auto w-full">
+            <span>任务执行情况：</span>
+            <div>正在执行的任务是：{currentTask()}</div>
+            <code>
+              <For each={log()}>{(logItem) => <div>{logItem}</div>}</For>
+            </code>
+          </div>
+        </Card>
+      </Card>
+      {/* Right part */}
+      <div class="h-full flex flex-col gap-4">
+        <Card class="flex flex-col p-2">
+          <div class="mb-4 flex items-center justify-between">
+            <span>Tasks</span>
+            <Show when={taskUpdating()} fallback={<IconButton onClick={async () => {
+              setTaskUpdating(true);
+              await invoke("reload_resources");
+              setTasks(await invoke("get_tasks"));
+              setTaskUpdating(false);
+            }}>
+              <Refresh />
+            </IconButton>}>
+              <CircularProgress color="inherit" />
+            </Show>
+          </div>
+          <div class="flex flex-col overflow-y-auto gap-2 min-w-60">
+            <For each={tasks()}>
+              {(task) => (
+                <div class="flex justify-between items-center">
+                  <span>{task}</span>
+                  <Button variant="contained" onClick={() => { onRunTask(task) }}>执行任务</Button>
+                </div>
+              )}
+            </For>
+          </div>
+        </Card>
+        <Card class="p-4 flex flex-none gap-24 items-center">
+          <span>Analyzers</span>
+          <Button variant="contained" onClick={getAnalyzeResult}>分析部署</Button>
+        </Card>
+      </div>
+    </div>
+  </>
+  // 战斗分析页面
+  const BattleAnalyzeView = () => <>
+    <Card>
+      <Button variant="contained" onClick={async () => {
+        await invoke("start_battle_analyzer");
+      }}>Rock and Roll!</Button>
+      <div>{battleState()}</div>
+    </Card>
+  </>
+
   return (
     <div class="flex flex-col w-full h-full max-h-full items-center p-4 box-border overflow-hidden">
       <Show when={connected()} fallback={<ConnectView />}>
-        <div class="flex-1 flex w-full max-h-full box-border gap-4">
-          {/* Screen part */}
-          <Card class="flex-1 flex flex-col gap-2 h-full items-center justify-stretch">
-            <div class="flex items-center justify-between border-box ml-2 mr-2">
-              <span>Screen</span>
-
-              <Show when={screenUpdating()} fallback={<IconButton onClick={updateScreen}>
-                <Refresh />
-              </IconButton>}>
-                <CircularProgress color="inherit" />
-              </Show>
-
-            </div>
-            <canvas ref={canvas} class="w-full" />
-            <Show when={images().length > 0} fallback={<></>}>
-              <div>
-                <Button variant="outlined" onClick={() => setCurrentImageIndex((i) => Math.max(i - 1, 0))}>上一张</Button>
-                <Button variant="outlined" onClick={() => setCurrentImageIndex((i) => Math.min(i + 1, images().length - 1))}>下一张</Button>
-              </div>
-            </Show>
-
-            {/* 打印执行信息的地方 */}
-            <Card class="w-11/12 pl-4 h-full m-2 flex-1 flex">
-              <div class="overflow-y-auto w-full">
-                <span>任务执行情况：</span>
-                <div>正在执行的任务是：{currentTask()}</div>
-                <code>
-                  <For each={log()}>{(logItem) => <div>{logItem}</div>}</For>
-                </code>
-              </div>
-            </Card>
-          </Card>
-          {/* Right part */}
-          <div class="h-full flex flex-col gap-4">
-            <Card class="flex flex-col p-2">
-              <div class="mb-4 flex items-center justify-between">
-                <span>Tasks</span>
-                <Show when={taskUpdating()} fallback={<IconButton onClick={async () => {
-                  setTaskUpdating(true);
-                  await invoke("reload_resources");
-                  setTasks(await invoke("get_tasks"));
-                  setTaskUpdating(false);
-                }}>
-                  <Refresh />
-                </IconButton>}>
-                  <CircularProgress color="inherit" />
-                </Show>
-              </div>
-              <div class="flex flex-col overflow-y-auto gap-2 min-w-60">
-                <For each={tasks()}>
-                  {(task) => (
-                    <div class="flex justify-between items-center">
-                      <span>{task}</span>
-                      <Button variant="contained" onClick={() => { onRunTask(task) }}>执行任务</Button>
-                    </div>
-                  )}
-                </For>
-              </div>
-            </Card>
-            <Card class="p-4 flex flex-none gap-24 items-center">
-              <span>Analyzers</span>
-              <Button variant="contained" onClick={getAnalyzeResult}>分析部署</Button>
-            </Card>
-          </div>
-        </div>
+        <AppBar position="static">
+          <Toolbar>
+            <Button color="inherit" onClick={() => {
+              setMainSelected(true);
+              setBattleAnalyzeSelected(false);
+            }}>主页面</Button>
+            <Button color="inherit" onClick={() => {
+              setBattleAnalyzeSelected(true);
+              setMainSelected(false);
+            }}>战斗分析页面</Button>
+          </Toolbar>
+        </AppBar>
+        <Show when={mainSelected()} fallback={<BattleAnalyzeView />}>
+          <MainView />
+        </Show>
       </Show>
     </div>
+
+
+
+
+    // <div class="flex flex-col w-full h-full max-h-full items-center p-4 box-border overflow-hidden">
+    //   <Show when={connected()} fallback={<ConnectView />}>
+    //     <div class="flex-1 flex w-full max-h-full box-border gap-4">
+    //       {/* Screen part */}
+    //       <Card class="flex-1 flex flex-col gap-2 h-full items-center justify-stretch">
+    //         <div class="flex items-center justify-between border-box ml-2 mr-2">
+    //           <span>Screen</span>
+
+    //           <Show when={screenUpdating()} fallback={<IconButton onClick={updateScreen}>
+    //             <Refresh />
+    //           </IconButton>}>
+    //             <CircularProgress color="inherit" />
+    //           </Show>
+
+    //         </div>
+    //         <canvas ref={canvas} class="w-full" />
+    //         <Show when={images().length > 0} fallback={<></>}>
+    //           <div>
+    //             <Button variant="outlined" onClick={() => setCurrentImageIndex((i) => Math.max(i - 1, 0))}>上一张</Button>
+    //             <Button variant="outlined" onClick={() => setCurrentImageIndex((i) => Math.min(i + 1, images().length - 1))}>下一张</Button>
+    //           </div>
+    //         </Show>
+
+    //         {/* 打印执行信息的地方 */}
+    //         <Card class="w-11/12 pl-4 h-full m-2 flex-1 flex">
+    //           <div class="overflow-y-auto w-full">
+    //             <span>任务执行情况：</span>
+    //             <div>正在执行的任务是：{currentTask()}</div>
+    //             <code>
+    //               <For each={log()}>{(logItem) => <div>{logItem}</div>}</For>
+    //             </code>
+    //           </div>
+    //         </Card>
+    //       </Card>
+    //       {/* Right part */}
+    //       <div class="h-full flex flex-col gap-4">
+    //         <Card class="flex flex-col p-2">
+    //           <div class="mb-4 flex items-center justify-between">
+    //             <span>Tasks</span>
+    //             <Show when={taskUpdating()} fallback={<IconButton onClick={async () => {
+    //               setTaskUpdating(true);
+    //               await invoke("reload_resources");
+    //               setTasks(await invoke("get_tasks"));
+    //               setTaskUpdating(false);
+    //             }}>
+    //               <Refresh />
+    //             </IconButton>}>
+    //               <CircularProgress color="inherit" />
+    //             </Show>
+    //           </div>
+    //           <div class="flex flex-col overflow-y-auto gap-2 min-w-60">
+    //             <For each={tasks()}>
+    //               {(task) => (
+    //                 <div class="flex justify-between items-center">
+    //                   <span>{task}</span>
+    //                   <Button variant="contained" onClick={() => { onRunTask(task) }}>执行任务</Button>
+    //                 </div>
+    //               )}
+    //             </For>
+    //           </div>
+    //         </Card>
+    //         <Card class="p-4 flex flex-none gap-24 items-center">
+    //           <span>Analyzers</span>
+    //           <Button variant="contained" onClick={getAnalyzeResult}>分析部署</Button>
+    //         </Card>
+    //       </div>
+    //     </div>
+    //   </Show>
+    // </div>
   );
 }
 
