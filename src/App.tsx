@@ -32,9 +32,8 @@ function App() {
   const [currentImageIndex, setCurrentImageIndex] = createSignal(0);
   // 当前战斗状态
   const [battleState, setBattleState] = createSignal("");
-  // 战斗过程的其他信息
-  const [operName, setOperName] = createSignal<string[]>([]);
-  const [available, setAvailable] = createSignal<boolean[]>([]);
+  // 干员相关信息
+  const [operInfos, setOperInfos] = createSignal<{ name: string, rect: { x: number, y: number, width: number, height: number }, available: boolean }[]>([]);
   // 分析战斗过程的状态
   const [battleAnalyzing, setBattleAnalyzing] = createSignal(false);
 
@@ -110,20 +109,37 @@ function App() {
 
     // 接收战斗状态信息
     unlistenBattleState = await listen('battleState', (event) => {
-      console.log(event.payload);
       setBattleState(event.payload);
     })
 
     // 接收干员名信息
-    unlistenOperName = await listen('oper_name', (event) => {
+    unlistenOperName = await listen<string>('oper_name', (event) => {
       const oper_name = event.payload;
-      setOperName((prevOpername) => [...prevOpername, oper_name]);
+      setOperInfos((prevInfos) => {
+        const newInfos = [...prevInfos];
+        newInfos[newInfos.length - 1].name = oper_name;
+        return newInfos;
+      });
+    })
+
+    // 接收干员位置信息
+    unlistenOperRect = await listen<{ x: number, y: number, width: number, height: number }>('rect', (event) => {
+      const rect = event.payload;
+      setOperInfos((prevInfos) => {
+        const newInfos = [...prevInfos];
+        newInfos[newInfos.length - 1].rect = rect;
+        return newInfos;
+      })
     })
 
     // 接收干员状态信息
-    unlistenOperAvai = await listen('available', (event) => {
+    unlistenOperAvai = await listen<boolean>('available', (event) => {
       const available = event.payload;
-      setAvailable((prevAvailable) => [...prevAvailable, available]);
+      setOperInfos((prevInfos) => {
+        const newInfos = [...prevInfos];
+        newInfos[newInfos.length - 1].available = available;
+        return newInfos;
+      });
     })
 
   })
@@ -135,6 +151,18 @@ function App() {
     }
     if (UnlistenImage) {
       UnlistenImage();
+    }
+    if (unlistenBattleState) {
+      unlistenBattleState();
+    }
+    if (unlistenOperName) {
+      unlistenOperName();
+    }
+    if (unlistenOperRect) {
+      unlistenOperRect();
+    }
+    if (unlistenOperAvai) {
+      unlistenOperAvai();
     }
   })
 
@@ -246,7 +274,15 @@ function App() {
       }} disabled={battleAnalyzing()}>Rock and Roll!</Button>
 
       <div>当前战斗状态：{battleState()}</div>
-
+      <div>当前干员状态：</div>
+      <For each={operInfos()}>
+        {(operInfo) => (
+          <div>干员名称：{operInfo.name} 干员位置：({operInfo.rect.x}, {operInfo.rect.y}, {operInfo.rect.width}, {operInfo.rect.height})
+          干员状态：{operInfo.available?"可用":"不可用"}
+          </div>
+        )}
+      </For>
+      
     </Card>
   </>
 
