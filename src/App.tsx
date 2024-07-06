@@ -30,8 +30,13 @@ function App() {
   const [images, setImages] = createSignal<Uint8Array[]>([]);
   // 存储当前显示的执行任务过程中的图像索引
   const [currentImageIndex, setCurrentImageIndex] = createSignal(0);
-  // 
+  // 当前战斗状态
   const [battleState, setBattleState] = createSignal("");
+  // 战斗过程的其他信息
+  const [operName, setOperName] = createSignal<string[]>([]);
+  const [available, setAvailable] = createSignal<boolean[]>([]);
+  // 分析战斗过程的状态
+  const [battleAnalyzing, setBattleAnalyzing] = createSignal(false);
 
   createEffect(async () => {
     if (connected()) {
@@ -102,10 +107,23 @@ function App() {
       // 显示新添加的图像
       setCurrentImageIndex(images().length - 1);
     })
-    // 接收信息
+
+    // 接收战斗状态信息
     unlistenBattleState = await listen('battleState', (event) => {
       console.log(event.payload);
       setBattleState(event.payload);
+    })
+
+    // 接收干员名信息
+    unlistenOperName = await listen('oper_name', (event) => {
+      const oper_name = event.payload;
+      setOperName((prevOpername) => [...prevOpername, oper_name]);
+    })
+
+    // 接收干员状态信息
+    unlistenOperAvai = await listen('available', (event) => {
+      const available = event.payload;
+      setAvailable((prevAvailable) => [...prevAvailable, available]);
     })
 
   })
@@ -222,9 +240,13 @@ function App() {
   const BattleAnalyzeView = () => <>
     <Card>
       <Button variant="contained" onClick={async () => {
+        setBattleAnalyzing(true);
         await invoke("start_battle_analyzer");
-      }}>Rock and Roll!</Button>
-      <div>{battleState()}</div>
+        setBattleAnalyzing(false);
+      }} disabled={battleAnalyzing()}>Rock and Roll!</Button>
+
+      <div>当前战斗状态：{battleState()}</div>
+
     </Card>
   </>
 
