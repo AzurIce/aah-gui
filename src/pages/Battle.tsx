@@ -39,12 +39,13 @@ const BattlePage: Component = () => {
   })
 
   return <>
-    <Card>
-      <Button variant="contained" onClick={async () => {
-        setBattleAnalyzing(true);
-        await invoke("start_battle_analyzer");
-        setBattleAnalyzing(false);
-      }} disabled={battleAnalyzing()}>Rock and Roll!</Button>
+    <Card class="w-full mt-2 h-full">
+      <Button variant="contained"
+        onClick={async () => {
+          setBattleAnalyzing(true);
+          await invoke("start_battle_analyzer");
+          setBattleAnalyzing(false);
+        }} disabled={battleAnalyzing()}>Rock and Roll!</Button>
       <div>当前战斗状态：{battleState()}</div>
       <div>当前干员状态：</div>
       <For each={operInfos()}>
@@ -52,6 +53,7 @@ const BattlePage: Component = () => {
           <DeployCard data={operInfo} />
         )}
       </For>
+
     </Card>
   </>
 }

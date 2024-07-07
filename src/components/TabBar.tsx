@@ -1,6 +1,9 @@
 import { useMatch, useNavigate } from "@solidjs/router";
 import { Button } from "@suid/material";
 import { Component, For } from "solid-js";
+import MainPage from "../pages/Main";
+import BattlePage from "../pages/Battle";
+import CopilotPage from "../pages/Copilot";
 
 const Tab: Component<{ label: string, path: string }> = (props) => {
   const match = useMatch(() => props.path);
@@ -13,14 +16,17 @@ const Tab: Component<{ label: string, path: string }> = (props) => {
   </>
 }
 
+export const tabs = [
+  { label: 'Main', path: '/', component: MainPage },
+  { label: 'Battle', path: '/battle', component: BattlePage },
+  { label: 'Copilot', path: '/copilot', component: CopilotPage },
+]
+
 const TabBar: Component = () => {
-  const tabs = [
-    { label: 'Main', path: '/' },
-    { label: 'Battle', path: '/battle' },
-  ]
+
 
   return <>
-    <div class="flex align-center gap-2 w-full">
+    <div class="flex align-center gap-2 w-full mt-2">
       <For each={tabs}>
         {tab => <Tab label={tab.label} path={tab.path} />}
       </For>

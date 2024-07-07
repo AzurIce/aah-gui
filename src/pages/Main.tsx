@@ -112,9 +112,8 @@ const MainPage: Component = () => {
             <Button variant="outlined" onClick={() => setCurrentImageIndex((i) => Math.min(i + 1, images().length - 1))}>下一张</Button>
           </div>
         </Show>
-
         {/* 打印执行信息的地方 */}
-        <Card class="w-11/12 pl-4 h-full m-2 flex-1 flex">
+        <Card class="w-full pl-4 h-full m-2 flex-1 flex">
           <div class="overflow-y-auto w-full">
             <span>任务执行情况：</span>
             <div>正在执行的任务是：{currentTask()}</div>

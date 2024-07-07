@@ -1,14 +1,13 @@
-import { createSignal, onMount, Show, Component, Switch, Match } from "solid-js";
+import { createSignal, onMount, Show, Component, Switch, Match, For } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { TextField, Button } from "@suid/material";
 import "./App.css";
-import { Route, Router, RouteSectionProps } from "@solidjs/router";
-import BattlePage from "./pages/Battle";
-import MainPage from "./pages/Main";
-import TabBar from "./components/TabBar";
+import { Route, Router, RouteSectionProps, useNavigate } from "@solidjs/router";
+import TabBar, { tabs } from "./components/TabBar";
 
 const Root: Component<RouteSectionProps> = (props) => {
   const [connected, setConnected] = createSignal(false);
+  const navigate = useNavigate();
 
   onMount(async () => {
     try {
@@ -16,6 +15,9 @@ const Root: Component<RouteSectionProps> = (props) => {
     } catch (e) {
       console.log(e)
     }
+    // for debug
+    // setConnected(true)
+    // navigate('/copilot')
   })
 
   const ConnectView = () => {
@@ -80,8 +82,9 @@ const Root: Component<RouteSectionProps> = (props) => {
 const App: Component = () => {
   return <>
     <Router root={Root}>
-      <Route path="/" component={MainPage} />
-      <Route path="/battle" component={BattlePage} />
+      <For each={tabs}>{(tab) =>
+        <Route path={tab.path} component={tab.component} />}
+      </For>
     </Router>
   </>
 }
