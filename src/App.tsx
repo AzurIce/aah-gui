@@ -2,10 +2,7 @@ import { createSignal, onMount, Show, Component, Switch, Match } from "solid-js"
 import { invoke } from "@tauri-apps/api/core";
 import { TextField, Button } from "@suid/material";
 import "./App.css";
-import { Refresh } from "@suid/icons-material";
-import { event } from "@tauri-apps/api";
 import { Route, Router, RouteSectionProps } from "@solidjs/router";
-import { createStore } from "solid-js/store";
 import BattlePage from "./pages/Battle";
 import MainPage from "./pages/Main";
 import TabBar from "./components/TabBar";
