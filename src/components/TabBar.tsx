@@ -26,7 +26,7 @@ const TabBar: Component = () => {
 
 
   return <>
-    <div class="flex align-center gap-2 w-full mt-2">
+    <div class="flex align-center gap-2 w-full mt-2 mb-2">
       <For each={tabs}>
         {tab => <Tab label={tab.label} path={tab.path} />}
       </For>
