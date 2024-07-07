@@ -45,9 +45,10 @@ const BattlePage: Component = () => {
           setBattleAnalyzing(true);
           await invoke("start_battle_analyzer");
           setBattleAnalyzing(false);
-        }} disabled={battleAnalyzing()}>Rock and Roll!</Button>
-      <div>当前战斗状态：{battleState()}</div>
-      <div>当前干员状态：</div>
+        }} disabled={battleAnalyzing()}
+      >Rock and Roll!</Button>
+      <div class="ml-2">当前战斗状态：{battleState()}</div>
+      <div class="ml-2">当前干员状态：</div>
       <For each={operInfos()}>
         {(operInfo) => (
           <DeployCard data={operInfo} />
