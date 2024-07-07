@@ -94,69 +94,6 @@ const MainPage: Component = () => {
   })
 
   return <>
-    <div class="flex-1 flex w-full max-h-full box-border gap-4">
-      {/* Screen part */}
-      <Card class="flex-1 flex flex-col gap-2 h-full items-center justify-stretch">
-        <div class="flex items-center justify-between border-box ml-2 mr-2">
-          <span>Screen</span>
-          <Show when={screenUpdating()} fallback={<IconButton onClick={updateScreen}>
-            <Refresh />
-          </IconButton>}>
-            <CircularProgress color="inherit" />
-          </Show>
-        </div>
-        <canvas ref={canvas} class="w-full" />
-        <Show when={images().length > 0} fallback={<></>}>
-          <div>
-            <Button variant="outlined" onClick={() => setCurrentImageIndex((i) => Math.max(i - 1, 0))}>上一张</Button>
-            <Button variant="outlined" onClick={() => setCurrentImageIndex((i) => Math.min(i + 1, images().length - 1))}>下一张</Button>
-          </div>
-        </Show>
-
-        {/* 打印执行信息的地方 */}
-        <Card class="w-11/12 pl-4 h-full m-2 flex-1 flex">
-          <div class="overflow-y-auto w-full">
-            <span>任务执行情况：</span>
-            <div>正在执行的任务是：{currentTask()}</div>
-            <code>
-              <For each={log()}>{(logItem) => <div>{logItem}</div>}</For>
-            </code>
-          </div>
-        </Card>
-      </Card>
-      {/* Right part */}
-      <div class="h-full flex flex-col gap-4">
-        <Card class="flex flex-col p-2">
-          <div class="mb-4 flex items-center justify-between">
-            <span>Tasks</span>
-            <Show when={taskUpdating()} fallback={<IconButton onClick={async () => {
-              setTaskUpdating(true);
-              await invoke("reload_resources");
-              setTasks(await invoke("get_tasks"));
-              setTaskUpdating(false);
-            }}>
-              <Refresh />
-            </IconButton>}>
-              <CircularProgress color="inherit" />
-            </Show>
-          </div>
-          <div class="flex flex-col overflow-y-auto gap-2 min-w-60">
-            <For each={tasks()}>
-              {(task) => (
-                <div class="flex justify-between items-center">
-                  <span>{task}</span>
-                  <Button variant="contained" onClick={() => { onRunTask(task) }}>执行任务</Button>
-                </div>
-              )}
-            </For>
-          </div>
-        </Card>
-        <Card class="p-4 flex flex-none gap-24 items-center">
-          <span>Analyzers</span>
-          <Button variant="contained" onClick={getAnalyzeResult}>分析部署</Button>
-        </Card>
-      </div>
-    </div>
   </>
 }
 

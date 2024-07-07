@@ -10,7 +10,9 @@ fn greet(name: &str) -> String {
 mod commands;
 mod config;
 mod state;
+
 use commands::*;
+
 
 fn main() {
     tauri::Builder::default()
@@ -24,6 +26,8 @@ fn main() {
             get_deploy_analyze_result,
             reload_resources,
             start_battle_analyzer,
+            get_connected,
+            disconnected,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

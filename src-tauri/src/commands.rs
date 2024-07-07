@@ -44,6 +44,20 @@ pub async fn connect(serial: String, window: Window) -> Result<(), String> {
     Ok(())
 }
 
+// 连接
+#[tauri::command]
+pub async fn get_connected() -> bool {
+    let mut core = core_instance().lock().unwrap();
+    core.is_some()
+}
+
+//断开连接
+#[tauri::command]
+pub async fn disconnected() {
+    let mut core = core_instance().lock().unwrap();
+    *core = None;
+}
+
 // 开始战斗分析
 #[tauri::command]
 pub async fn start_battle_analyzer() -> Result<(), String> {
