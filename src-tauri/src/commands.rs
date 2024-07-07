@@ -63,7 +63,7 @@ pub async fn start_battle_analyzer() -> Result<(), String> {
     Ok(())
 }
 
-// 获得任务名称
+// get_tasks获得任务名称
 #[tauri::command]
 pub async fn get_tasks() -> Result<Vec<String>, String> {
     let mut core = core_instance().lock().unwrap();
@@ -77,6 +77,21 @@ pub async fn get_tasks() -> Result<Vec<String>, String> {
     Ok(tasks)
 }
 
+// get_copilots获得任务名称
+#[tauri::command]
+pub async fn get_copilots() -> Result<Vec<String>, String> {
+    let mut core = core_instance().lock().unwrap();
+    if core.is_none() {
+        return Err("No device connected".to_string());
+    }
+    let core = core.as_mut().unwrap();
+
+    // 调用核心实例的 get_copilots 方法获取任务名称
+    let copilots = core.get_copilots();
+    Ok(copilots)
+}
+
+
 // 重新加载资源
 #[tauri::command]
 pub async fn reload_resources() -> Result<(), String> {
@@ -89,7 +104,7 @@ pub async fn reload_resources() -> Result<(), String> {
     core.reload_resources()
 }
 
-// 执行任务
+// run_task执行任务
 #[tauri::command]
 pub async fn run_task(name: String) -> Result<(), String> {
     let mut core = core_instance().lock().unwrap();
@@ -99,6 +114,18 @@ pub async fn run_task(name: String) -> Result<(), String> {
     let core = core.as_mut().unwrap();
 
     core.run_task(name)
+}
+
+// run_copilot执行任务
+#[tauri::command]
+pub async fn run_copilot(name: String) -> Result<(), String> {
+    let mut core = core_instance().lock().unwrap();
+    if core.is_none() {
+        return Err("No device connected".to_string());
+    }
+    let core = core.as_mut().unwrap();
+
+    core.run_copilot(name)
 }
 
 // 获得部署分析结果
@@ -161,5 +188,16 @@ mod test {
         let dir =
             Path::new("E:\\summer\\azur-arknights-helper\\resources\\templates\\MUMU-1920x1080");
         screen.save(dir.join("choose-time.png")).unwrap();
+    }
+
+    #[test]
+    fn test_copilot() {
+        let mut core = AAH::connect(
+            "127.0.0.1:16384",
+            "../../azur-arknights-helper\\resources",
+            |_| {},
+        )
+        .unwrap();
+        core.run_copilot("1-4").unwrap();
     }
 }

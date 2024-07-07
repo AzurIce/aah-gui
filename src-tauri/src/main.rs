@@ -28,6 +28,8 @@ fn main() {
             start_battle_analyzer,
             get_connected,
             disconnected,
+            get_copilots,
+            run_copilot,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
