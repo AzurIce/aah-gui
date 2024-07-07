@@ -25,15 +25,7 @@ pub async fn connect(serial: String, window: Window) -> Result<(), String> {
                 window.emit("image_event", buf).unwrap();
             }
             TaskEvt::BattleAnalyzerRes(analyzer_output) => {
-                let battle_state = analyzer_output.battle_state;
-                window.emit("battleState", battle_state).unwrap();
-                
-                println!("{:?}", analyzer_output.deploy_cards);
-                // let deploy_cards = analyzer_output.deploy_cards;
-
-                for deploy_card in analyzer_output.deploy_cards {
-                    window.emit("oper_info", deploy_card).unwrap();
-                }
+                window.emit("battle_analyzer", analyzer_output).unwrap();
             }
         }
     };

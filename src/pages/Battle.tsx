@@ -5,6 +5,12 @@ import { UnlistenFn, listen } from "@tauri-apps/api/event";
 import DeployCard from "../components/DeployCard";
 import { DeployCardType } from "../components/DeployCard";
 
+
+type BattleAnalyzerOutput = {
+  battle_state: string,
+  deploy_cards: DeployCardType[]
+}
+
 const BattlePage: Component = () => {
   // 分析战斗过程的状态
   const [battleAnalyzing, setBattleAnalyzing] = createSignal(false);
@@ -14,31 +20,21 @@ const BattlePage: Component = () => {
   const [operInfos, setOperInfos] = createSignal<DeployCardType[]>([]);
 
   // 后端发的战斗状态
-  let unlistenBattleState: UnlistenFn | null;
-  // 后端发的干员信息
-  let unlistenOperInfo: UnlistenFn | null;
+  let unlistenBattleAnalyzer: UnlistenFn | null;
 
   onMount(async () => {
     // 接收战斗状态信息
-    unlistenBattleState = await listen('battleState', (event) => {
-      console.log(event.payload)
-      setBattleState(event.payload);
-    })
-
-    // 接收干员信息
-    unlistenOperInfo = await listen<DeployCardType>('oper_info', (event) => {
-      const oper_info = event.payload;
-      setOperInfos((prevInfos) => [...prevInfos, oper_info]);
+    unlistenBattleAnalyzer = await listen<BattleAnalyzerOutput>('battle_analyzer', (event) => {
+      const { battle_state, deploy_cards } = event.payload;
+      setBattleState(battle_state);
+      setOperInfos(deploy_cards);
     })
   })
 
   // 清理监听器
   onCleanup(() => {
-    if (unlistenBattleState) {
-      unlistenBattleState();
-    }
-    if (unlistenOperInfo) {
-      unlistenOperInfo();
+    if (unlistenBattleAnalyzer) {
+      unlistenBattleAnalyzer();
     }
   })
 

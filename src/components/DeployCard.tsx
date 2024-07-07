@@ -2,7 +2,7 @@ import { Card, Chip, Popover } from "@suid/material";
 import { Component, createSignal } from "solid-js";
 
 export type DeployCardType = {
-  name: string,
+  oper_name: string,
   rect: {
     x: number,
     y: number,
@@ -31,7 +31,7 @@ const DeployCard: Component<{ data: DeployCardType }> = (props) => {
       aria-haspopup="true"
       onMouseEnter={handlePopoverOpen}
       onMouseLeave={handlePopoverClose}
-      label={props.data.name} variant={props.data.available ? "outlined" : "filled"}>
+      label={props.data.oper_name} variant={props.data.available ? "outlined" : "filled"}>
     </Chip>
     <Popover
       class="m-2"
@@ -52,7 +52,7 @@ const DeployCard: Component<{ data: DeployCardType }> = (props) => {
       elevation={2}
     >
       <div class="flex flex-col gap-2 m-2">
-        <span>干员 ID: {props.data.name}</span>
+        <span>干员 ID: {props.data.oper_name}</span>
         <span>部署卡片位置: {`{x: ${props.data.rect.x}, y: ${props.data.rect.y}}`}</span>
         <span>就绪：{props.data.available ? "是" : "否"}</span>
       </div>
