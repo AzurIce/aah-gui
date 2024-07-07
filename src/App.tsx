@@ -1,7 +1,6 @@
-import { createSignal, For, createEffect, onMount, onCleanup, Show, Component, createContext, useContext, Switch, Match } from "solid-js";
-import { UnlistenFn, emit, listen } from "@tauri-apps/api/event";
+import { createSignal, onMount, Show, Component, Switch, Match } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
-import { TextField, Button, IconButton, Card, CircularProgress, AppBar, Toolbar } from "@suid/material";
+import { TextField, Button } from "@suid/material";
 import "./App.css";
 import { Refresh } from "@suid/icons-material";
 import { event } from "@tauri-apps/api";
@@ -15,9 +14,9 @@ const Root: Component<RouteSectionProps> = (props) => {
   const [connected, setConnected] = createSignal(false);
 
   onMount(async () => {
-    try{
+    try {
       setConnected(await invoke('get_connected'))
-    } catch(e) {
+    } catch (e) {
       console.log(e)
     }
   })
