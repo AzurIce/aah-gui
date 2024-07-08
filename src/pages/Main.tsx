@@ -52,8 +52,11 @@ const MainPage: Component = () => {
     setRunning(true);
     setLog([]);
     setImages([]);
-    await invoke("run_task", { name: task });
-    setRunning(false);
+    try{
+      await invoke("run_task", { name: task });
+    } finally {
+      setRunning(false);
+    }
   }
 
   // 监听后端发来的日志信息
