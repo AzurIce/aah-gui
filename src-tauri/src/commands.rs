@@ -154,20 +154,10 @@ pub async fn get_screen(request: tauri::ipc::Request<'_>) -> Result<tauri::ipc::
     let start = Instant::now();
     let mut core = core_instance().lock().unwrap();
     let core = core.as_mut().ok_or("No device connected".to_string())?;
-
     // ! screenshot 700ms
     let screen = core.get_raw_screen()?; // 假设 get_screen 返回的是 DynamicImage 类型
-
-    // let mut buf = Vec::new();
-    // screen
-    //     .write_to(&mut Cursor::new(&mut buf), ImageFormat::Png)
-    //     .map_err(|e| format!("编码图像失败: {:?}", e))?;
     println!("elapsed {:?}", start.elapsed());
-
-    // windows.emit("get-screen", "get-screen-succeed");
-    // Ok(())
     Ok(tauri::ipc::Response::new(screen))
-    // Ok(screen)
 }
 
 #[cfg(test)]
