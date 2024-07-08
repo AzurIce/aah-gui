@@ -18,6 +18,7 @@ const CopilotPage: Component = () => {
 
   // 监听后端发来的日志信息
   let unlistenLog: UnlistenFn | null;
+  let logContainerRef: HTMLDivElement | undefined;
 
   onMount(async () => {
     // 在前端 Card 显示日志信息
@@ -38,6 +39,13 @@ const CopilotPage: Component = () => {
     setCopilots(await invoke("get_copilots"));
   })
 
+  // 滚动到最下方
+  createEffect(() => {
+    if (logContainerRef) {
+      logContainerRef.scrollTop = logContainerRef.scrollHeight;
+    }
+  });
+
   // 运行 copilot 时执行的函数
   const onRunCopilot = async (copilot: string) => {
     setCurrentCopilot(copilot);
@@ -53,7 +61,7 @@ const CopilotPage: Component = () => {
   return <>
     <div class="flex flex-1 w-full box-border gap-4 overflow-y-auto">
       <Card class="flex flex-1 ">
-        <div class="overflow-y-auto w-full ml-2 mt-2">
+        <div class="overflow-y-auto w-full ml-2 mt-2" ref={logContainerRef}>
           <span>
             Copilot执行情况：
           </span>
