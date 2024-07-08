@@ -44,8 +44,8 @@ const CopilotPage: Component = () => {
   }
 
   return <>
-    <div class="flex flex-1 w-full box-border gap-4">
-      <Card class="flex flex-1">
+    <div class="flex flex-1 w-full box-border gap-4 overflow-y-auto">
+      <Card class="flex flex-1 ">
         <div class="overflow-y-auto w-full ml-2 mt-2">
           <span>
             Copilot执行情况：
