@@ -440,52 +440,53 @@ GUI 应用展示 Analyzer 分析结果：
 
     - `aah-ai`:
         - <font color="blue">@肖斌 示范 PaddleOCR onnx 推理代码阅读</font>
-        - @杨鹏、<font color="blue">@唐博文</font> 阅读 PaddleOCR onnx 推理脚本
+        - @杨鹏对导出的OCR检测模型进行调用
         - <font color="blue">@唐博文 将PaddleOCR模型格式转换为onnx格式</font>
-        - @王彦博 生成场上干员数据集（10个干员，单个关卡，固定位置，4个方向），并训练，效果还可以。对于遮挡处理不够好
-        - <font color="blue">@田佳文 制作场上干员数据集</font>
+        - @王彦博 基于YOLOv8模型训练待部署区干员（337类）进行识别模型
+        - <font color="blue">@田佳文 添加模式识别脚本 </font>
     - `azur-arknights-helper`：@肖斌
     - `aah-gui`：
         - <font color="blue">@肖斌 重构界面</font>
+        - @唐博文 在前端添加分析部署按钮，获取后端分析部署后的图像数据
 
 - 2024-07-03
+  
   - `aah-ai`:
     - <font color="blue">@肖斌 示范 PaddleOCR onnx 推理代码阅读</font>
-    - @杨鹏、<font color="blue">@唐博文</font> 阅读 PaddleOCR onnx 推理脚本
+    - @杨鹏了解导出的OCR识别模型
     - <font color="blue">@唐博文 标注YOLO8验证集</font>
-    - @王彦博 生成场上干员数据集（10个干员，单个关卡，固定位置，4个方向），并训练，效果还可以。对于遮挡处理不够好
+    - @王彦博 添加多个干员叠加图片数据集以及暗处理数据集继续炼丹
     - <font color="blue">@田佳文 制作场上干员数据集</font>
   - `azur-arknights-helper`：@肖斌
   - `aah-gui`：
-    - <font color="blue">@肖斌 重构界面</font>
-
+    - @唐博文 添加优化组件CircularProgress等
+    - @田佳文 后端添加分析部署函数
+  
 - 2024-07-04
   - `aah-ai`:
-    - <font color="blue">@肖斌 示范 PaddleOCR onnx 推理代码阅读</font>
     - @杨鹏、<font color="blue">@唐博文</font> 阅读 PaddleOCR onnx 推理脚本
-    - <font color="blue">@唐博文 将PaddleOCR模型格式转换为onnx格式</font>
     - @王彦博 生成场上干员数据集（10个干员，单个关卡，固定位置，4个方向），并训练，效果还可以。对于遮挡处理不够好
-    - <font color="blue">@田佳文 制作场上干员数据集</font>
+    - <font color="blue">@田佳文 制作场上干员数据集，扩充数据集</font>
   - `azur-arknights-helper`：@肖斌
   - `aah-gui`：
-    - <font color="blue">@肖斌 重构界面</font>
-
+    - @ 唐博文 实现前端页面展示执行任务过程的多张图片而不是之前的一张，优化任务执行情况区域显示的信息
+  
 - 2024-07-05
+  
   - `aah-ai`:
-    - <font color="blue">@肖斌 示范 PaddleOCR onnx 推理代码阅读</font>
-    - @杨鹏、<font color="blue">@唐博文</font> 阅读 PaddleOCR onnx 推理脚本
-    - <font color="blue">@唐博文 将PaddleOCR模型格式转换为onnx格式</font>
-    - @王彦博 生成场上干员数据集（10个干员，单个关卡，固定位置，4个方向），并训练，效果还可以。对于遮挡处理不够好
-    - <font color="blue">@田佳文 制作场上干员数据集</font>
+    - @杨鹏阅读rustOCR文档尝试rustocr方法编写。
+    - @唐博文 阅读PaddleOCR的C++脚本，尝试转换成Rust代码
+    - @王彦博 添加@唐博文 标注的战斗画面数据集（含遮挡验证集）继续训练
+    - <font color="blue">@田佳文 制作场上干员数据集，扩充数据集</font>
   - `azur-arknights-helper`：@肖斌
   - `aah-gui`：
-    - <font color="blue">@肖斌 重构界面</font>
+    - @唐博文 前端修改字体
 
 - 2024-07-06
   - `aah-ai`:
     - <font color="blue">@唐博文 将PaddleOCR的文本检测功能转换成Rust代码</font>
     - @杨鹏 研究PaddleOCR的onnx模型的使用方法以及代码转换，初步整合血条、方向、技能准备状态识别的三个模型
-    - @王彦博 
+    - @王彦博 使用@肖斌 提供的新思路构建的新数据集进行新一轮战斗画面识别模型训练，结果不佳
   - `azur-arknights-helper`：@肖斌
   - `aah-gui`：
     - @唐博文 添加分析战斗页面，在前端显示战斗分析数据
@@ -495,12 +496,24 @@ GUI 应用展示 Analyzer 分析结果：
   - `aah-ai`:
     - <font color="blue">@肖斌 提供作业文件的生成思路</font>
     - @杨鹏 综合利用多种检测模型，实现对图像中血条、方向和技能准备状态的全方位智能检测与分析
-    - @王彦博 生成场上干员数据集（24个干员，多个关卡，固定位置，4个方向），并训练，效果较上次更佳
+    - @王彦博 生成场上干员数据集（24个干员，多个关卡，固定位置，4个方向），并训练，效果较上次更佳，部分关卡测试可达到95%以上准确率
   - `azur-arknights-helper`：@肖斌
   - `aah-gui`：
     - <font color="blue">@肖斌 再次重构界面</font>
     - @唐博文 将原来的代码改写到重构后的不同文件中，添加执行自动战斗页面
     - @田佳文 在后端添加disconnect函数，改写connect函数，添加获取copilot和执行copilot的函数
+  
+- 2024-07-08
+  
+  - `aah-ai`:
+    - <font color="blue">@肖斌 提供作业文件的生成思路</font>
+    - @杨鹏 @王彦博 研究生成作业文件的方法
+  - `azur-arknights-helper`：@肖斌
+  - `aah-gui`：
+    - @唐博文 优化页面，添加Copilot页面的滚动条
+    - @田佳文 编写toml游戏脚本
+
+
 
 
 
