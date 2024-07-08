@@ -43,8 +43,11 @@ const CopilotPage: Component = () => {
     setCurrentCopilot(copilot);
     setRunning(true);
     setLog([]);
-    await invoke("run_copilot", { name: copilot });
-    setRunning(false);
+    try {
+      await invoke("run_copilot", { name: copilot });
+    } finally {
+      setRunning(false);
+    }
   }
 
   return <>
