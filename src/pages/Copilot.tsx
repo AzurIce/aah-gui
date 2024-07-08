@@ -80,7 +80,6 @@ const CopilotPage: Component = () => {
               </div>
             )}
           </For>
-
         </div>
       </Card>
     </div>

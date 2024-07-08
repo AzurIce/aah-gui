@@ -1,4 +1,4 @@
-import { Card, Chip, Popover } from "@suid/material";
+import { Chip, Popover } from "@suid/material";
 import { Component, createSignal } from "solid-js";
 
 export type DeployCardType = {
