@@ -11,6 +11,8 @@ const CopilotPage: Component = () => {
   const [currentCopilot, setCurrentCopilot] = createSignal("");
   // 执行 copilot 情况的日志信息
   const [log, setLog] = createSignal<string[]>([]);
+  // 是否正在执行copilot
+  const [running, setRunning] = createSignal(false);
   // 更新 copilot 状态
   const [copilotUpdating, setCopilotUpdating] = createSignal(false);
 
@@ -39,8 +41,10 @@ const CopilotPage: Component = () => {
   // 运行 copilot 时执行的函数
   const onRunCopilot = async (copilot: string) => {
     setCurrentCopilot(copilot);
+    setRunning(true);
     setLog([]);
     await invoke("run_copilot", { name: copilot });
+    setRunning(false);
   }
 
   return <>
@@ -76,7 +80,7 @@ const CopilotPage: Component = () => {
             {(copilot) => (
               <div class="flex justify-between items-center">
                 <span>{copilot}</span>
-                <Button class="mr-2" variant="contained" onClick={() => { onRunCopilot(copilot) }}>执行copilot</Button>
+                <Button class="mr-2" variant="contained" onClick={() => { onRunCopilot(copilot) }} disabled={running()}>执行copilot</Button>
               </div>
             )}
           </For>

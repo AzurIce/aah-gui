@@ -13,6 +13,8 @@ const MainPage: Component = () => {
   const [taskUpdating, setTaskUpdating] = createSignal(false);
   // 执行任务情况的日志信息
   const [log, setLog] = createSignal<string[]>([]);
+  // 是否正在执行任务
+  const [running, setRunning] = createSignal(false);
   // 任务列表（字符串型数组）
   const [tasks, setTasks] = createSignal<string[]>([]);
   // 当前正在执行的任务
@@ -47,9 +49,11 @@ const MainPage: Component = () => {
   // 运行任务时执行的函数
   const onRunTask = async (task: string) => {
     setCurrentTask(task);
+    setRunning(true);
     setLog([]);
     setImages([]);
     await invoke("run_task", { name: task });
+    setRunning(false);
   }
 
   // 监听后端发来的日志信息
@@ -144,7 +148,7 @@ const MainPage: Component = () => {
               {(task) => (
                 <div class="flex justify-between items-center">
                   <span>{task}</span>
-                  <Button variant="contained" onClick={() => { onRunTask(task) }}>执行任务</Button>
+                  <Button variant="contained" onClick={() => { onRunTask(task) }} disabled={running()}>执行任务</Button>
                 </div>
               )}
             </For>
