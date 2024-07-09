@@ -12,30 +12,43 @@ gantt
     准备工作   :prepare, 2024-06-28, 1d
     cv模型    :cv, after prepare, 5d
     改善cv模型 :cvp, after cv, 3d
-    操作轴生成 :after cv, 2d
-    操作轴执行 :2024-07-03, 2d
+    操作轴生成 :2024-07-08, 1d
+    操作轴执行 :2024-07-07, 2d
     section 模型
     干员技能就绪二分类 :done, 2024-06-28, 1d
     干员方向四分类    :done, 2024-06-28, 2d
     待部署区识别      :crit, 2024-06-29, 2d
+    干员血条目标检测    :done, 2024-06-29, 3d
+    干员目标检测    :done, 2024-06-29, 9d
     section GUI 程序
-    骨架搭建      :2024-06-28, 1d
-    接入 aah-core :2024-06-29, 1d
+    骨架搭建          :2024-06-28, 1d
+    接入 aah-core    :2024-06-29, 1d
+    实现 Task 页面   :2024-06-30, 2d
+    实现分析页面       :2024-07-05, 1d
+    实现 Copilot 页面 :2024-07-07, 2d
     section 核心
     代码整理及文档注释编写 :2024-06-29, 1d
     关卡数据解析         :2024-06-29, 1d
     地块到像素坐标转换    :2024-06-29, 1d
+    Controller 实现 :2024-06-29, 2d
+    Task 实现 :2024-06-29, 3d
+    模板匹配算法实现 :2024-06-29, 5d
+    待部署区分析 :2024-07-05, 1d
+    战斗画面分析 :2024-07-06, 1d
+    自动战斗实现 :2024-07-07, 1d
 ```
 
 ## 功能分析
 
-AAH明日方舟助手需要实现的功能有：
+AAH 明日方舟助手需要实现的功能有：
 
-（1）自动执行明日方舟游戏的一些任务如领取奖励，招募干员等，并显示执行情况。
+（1）自动执行明日方舟游戏的一些任务如登录、领取奖励等，并显示执行情况。
 
 （2）对正在进行中的一场战斗的战斗状态和场中的干员状态进行分析，并将分析结果可视化。
 
-（3）分析战斗视频进行自动战斗，自动在战斗过程中进行部署干员、撤离干员、释放技能等操作。
+（3）依据战斗文件进行自动战斗，包含部署干员、撤离干员、释放技能等操作。
+
+（4）分析战斗视频生成战斗文件
 
 ## 概述
 
@@ -276,23 +289,19 @@ yolov8n，输入是 16:9 的图片缩放到 640x640
 
 ### 4. 场上干员目标检测
 
-基于 yolov8，正在训练，目前效果：
+基于 yolov8n，准确率可以，不过遮挡等复杂情况会受到影响
 
-<video src="./assets/yolo.mp4"/>
+![image-20240708202659954](./assets/image-20240708202659954.png)
 
-## 功能详细实现
+## 功能手册
 
 ### 1.设备连接与断开
 
-<img src="D:\LastProject\AahGui\doc\assets\image-20240708205807134.png" alt="image-20240708205807134" style="zoom:50%;" />
-
-用户可以输入序列号点击“建立连接”按钮连接对应的设备，同时也可以随时通过点击“断开连接”按钮断开连接。通过调用后端的connect和disconnected函数实现建立连接和断开连接。
+用户可以输入序列号点击“建立连接”按钮连接对应的设备，同时也可以随时通过点击“断开连接”按钮断开连接。通过调用后端的 connect 和 disconnected 函数实现建立连接和断开连接。
 
 ### 2.Main Page
 
-<img src="D:\LastProject\AahGui\doc\assets\e827442cbfb813cfdf7168712c4b2c8.png" alt="e827442cbfb813cfdf7168712c4b2c8" style="zoom: 50%;" />
-
-Main Page部分包括获取屏幕画面、可执行任务列表、执行任务、显示任务执行情况、分析部署等功能。
+Main Page 部分包括获取屏幕画面、可执行任务列表、执行任务、显示任务执行情况、分析部署等功能。
 
 **获取屏幕画面**：应用会通过用户输入的序列号与对应的设备建立连接，前端调用后端的 get_screen 函数获得屏幕画面数据，然后将屏幕数据绘制在 canvas 上。
 
@@ -300,29 +309,25 @@ Main Page部分包括获取屏幕画面、可执行任务列表、执行任务�
 
 **执行任务**：在前端显示的任务列表中，每个任务的右侧都有一个可点击的“执行任务”按钮。用户点击想要执行的任务右侧的按钮时，前端就会把对应的任务名作为参数传给后端的 run_task 函数，后端就会执行对应的任务，并返回任务执行的日志信息到前端。
 
-**显示任务执行情况**：这一部分功能的完成利用了Tauri中的event特性，在建立连接之后，点击执行任务后后端的任务事件回调函数就会把任务执行的日志信息和任务执行过程中的图片emit到前端，前端listen对应的事件名就可以接收到这些数据并更新前端页面。
+**显示任务执行情况**：这一部分功能的完成利用了 Tauri 中的event特性，在建立连接之后，点击执行任务后后端的任务事件回调函数就会把任务执行的日志信息和任务执行过程中的图片 emit 到前端，前端 listen 对应的事件名就可以接收到这些数据并更新前端页面。
 
 **分析部署**：当用户进入了一局战斗时，点击前端的“分析部署”按钮，前端就会调用后端的 get_deploy_analyze_result 函数，该函数可以将战斗当前画面的部署分析结果图像数据返回给前端，前端拿到数据后就可以更新前端画面。
 
 ### 3.Battle Page
 
-<img src="D:\LastProject\AahGui\doc\assets\4d6bd6bdc93e2f3a48a7a3ba1ab291c.png" alt="4d6bd6bdc93e2f3a48a7a3ba1ab291c" style="zoom:50%;" />
-
-Battle Page部分包括获取当前战斗状态和干员相关状态。
+Battle Page 部分包括获取当前战斗状态和干员相关状态。
 
 **获取战斗状态和干员状态**：这一部分功能的完成同样利用了Tauri中的event特性，当用户进入了一局战斗时，点击前端的“ROCK AND ROLL”按钮，就可以将当前的战斗状态以及这场战斗中所有干员的位置信息、是否可用信息等返回到前端，前端就会在对应的地方显示这些信息，这些信息也是在任务回调函数中被emit到前端的。
 
 ### 4.Copilot Page
 
-<img src="D:\LastProject\AahGui\doc\assets\d62702057c0bd0a647bcc075b07bd6e.png" alt="d62702057c0bd0a647bcc075b07bd6e" style="zoom:50%;" />
+Copilot Page 部分包括可执行 Copilot 列表，执行 Copilot，显示 Copilot 的执行情况。
 
-Copilot Page部分包括可执行Copilot列表，执行Copilot，显示Copilot的执行情况。
+**获取 Copilot 列表**：建立连接之后，前端需要在页面中显示可执行的 Copilot 列表。前端调用后端的get_copilots 函数可以获得后端的 copilot 数据，然后在前端进行对应的数据显示。
 
-**获取Copilot列表**：建立连接之后，前端需要在页面中显示可执行的Copilot列表。前端调用后端的get_copilots函数可以获得后端的copilot数据，然后在前端进行对应的数据显示。
+**执行 Copilot**：在前端显示的copilot列表中，每个 copilot 右侧都有一个可点击的“执行 copilot”按钮。用户点击想要执行的copilot右侧的按钮时，前端就会把对应的 copilot 名作为参数传给后端的 run_copilot 函数，后端就会执行对应的 copilot，并返回 copilot 执行的相关信息到前端。
 
-**执行Copilot**：在前端显示的copilot列表中，每个copilot右侧都有一个可点击的“执行copilot”按钮。用户点击想要执行的copilot右侧的按钮时，前端就会把对应的copilot名作为参数传给后端的run_copilot函数，后端就会执行对应的copilot，并返回copilot执行的相关信息到前端。
-
-**显示Copilot的执行情况**：与显示任务执行情况类似，利用Tauri中的event特性，如果有copilot在执行，就把执行过程中的日志信息emit给前端，前端对这些数据进行展示。
+**显示 Copilot 的执行情况**：与显示任务执行情况类似，利用 Tauri 中的 event 特性，如果有 copilot 在执行，就把执行过程中的日志信息 emit 给前端，前端对这些数据进行展示。
 
 ## 功能演示
 
@@ -452,7 +457,9 @@ GUI 应用展示 Analyzer 分析结果：
         - <font color="blue">@唐博文 将PaddleOCR模型格式转换为onnx格式</font>
         - @王彦博 基于YOLOv8模型训练待部署区干员（337类）进行识别模型
         - <font color="blue">@田佳文 添加模式识别脚本 </font>
-    - `azur-arknights-helper`：@肖斌
+    - `azur-arknights-helper`：
+        - @肖斌 优化截图数据传输速度
+        - @肖斌 重构 Controller
     - `aah-gui`：
         - <font color="blue">@肖斌 重构界面</font>
         - @唐博文 在前端添加分析部署按钮，获取后端分析部署后的图像数据
@@ -465,7 +472,8 @@ GUI 应用展示 Analyzer 分析结果：
     - <font color="blue">@唐博文 标注YOLO8验证集</font>
     - @王彦博 添加多个干员叠加图片数据集以及暗处理数据集继续炼丹
     - <font color="blue">@田佳文 制作场上干员数据集</font>
-  - `azur-arknights-helper`：@肖斌
+  - `azur-arknights-helper`：
+      - @肖斌 开始实现 Copilot，完成从关卡选择界面进入关卡的操作实现
   - `aah-gui`：
     - @唐博文 添加优化组件CircularProgress等
     - @田佳文 后端添加分析部署函数
@@ -475,7 +483,9 @@ GUI 应用展示 Analyzer 分析结果：
     - @杨鹏、<font color="blue">@唐博文</font> 阅读 PaddleOCR onnx 推理脚本
     - @王彦博 生成场上干员数据集（10个干员，单个关卡，固定位置，4个方向），并训练，效果还可以。对于遮挡处理不够好
     - <font color="blue">@田佳文 制作场上干员数据集，扩充数据集</font>
-  - `azur-arknights-helper`：@肖斌
+  - `azur-arknights-helper`：
+      - @肖斌 引入 Minitouch 以支持更精细的触控操作
+      - @肖斌 添加事件回调接口以支持将事件发送给 GUI
   - `aah-gui`：
     - @ 唐博文 实现前端页面展示执行任务过程的多张图片而不是之前的一张，优化任务执行情况区域显示的信息
   
@@ -486,26 +496,33 @@ GUI 应用展示 Analyzer 分析结果：
     - @唐博文 阅读PaddleOCR的C++脚本，尝试转换成Rust代码
     - @王彦博 添加@唐博文 标注的战斗画面数据集（含遮挡验证集）继续训练
     - <font color="blue">@田佳文 制作场上干员数据集，扩充数据集</font>
-  - `azur-arknights-helper`：@肖斌
+  - `azur-arknights-helper`：
+      - @肖斌
   - `aah-gui`：
     - @唐博文 前端修改字体
-
+  
 - 2024-07-06
   - `aah-ai`:
     - <font color="blue">@唐博文 将PaddleOCR的文本检测功能转换成Rust代码</font>
     - @杨鹏 研究PaddleOCR的onnx模型的使用方法以及代码转换，初步整合血条、方向、技能准备状态识别的三个模型
-    - @王彦博 使用@肖斌 提供的新思路构建的新数据集进行新一轮战斗画面识别模型训练，结果不佳
-  - `azur-arknights-helper`：@肖斌
+    - @王彦博 使用 @肖斌 提供的新思路构建的新数据集进行新一轮战斗画面识别模型训练，结果不佳
+  - `azur-arknights-helper`：
+      - @肖斌 实现 BsetMatcher 以从待部署区识别干员
+      - @肖斌 实现 BattleAnalyzer 以分析战斗画面
   - `aah-gui`：
     - @唐博文 添加分析战斗页面，在前端显示战斗分析数据
     - @田佳文 在后端添加分析战斗数据的函数
-
+  
 - 2024-07-07
   - `aah-ai`:
-    - <font color="blue">@肖斌 提供作业文件的生成思路</font>
+    - <font color="blue">@肖斌 提供 Cpoilot 文件的生成思路</font>
     - @杨鹏 综合利用多种检测模型，实现对图像中血条、方向和技能准备状态的全方位智能检测与分析
     - @王彦博 生成场上干员数据集（24个干员，多个关卡，固定位置，4个方向），并训练，效果较上次更佳，部分关卡测试可达到95%以上准确率
-  - `azur-arknights-helper`：@肖斌
+  - `azur-arknights-helper`：
+      - @肖斌 实现自动战斗逻辑
+      - @肖斌 调整 Analyzer 接口以供 @杨鹏、@王彦博 使用
+      - @肖斌 重构模板匹配代码
+      - @肖斌 正确实现 OpenCV 中的 SQDIFF、CCORR、CCOEFF 及归一化版本的算法
   - `aah-gui`：
     - <font color="blue">@肖斌 再次重构界面</font>
     - @唐博文 将原来的代码改写到重构后的不同文件中，添加执行自动战斗页面
@@ -514,16 +531,33 @@ GUI 应用展示 Analyzer 分析结果：
 - 2024-07-08
   
   - `aah-ai`:
-    - <font color="blue">@肖斌 提供作业文件的生成思路</font>
-    - @杨鹏 @王彦博 研究生成作业文件的方法
-  - `azur-arknights-helper`：@肖斌
+    - @杨鹏 @王彦博 研究生成 copilot 文件的方法
+  - `azur-arknights-helper`：
+      - @肖斌 模板匹配算法调优
+      - @肖斌 各 analyzer 调优
+      - <font color="blue">@田佳文 编写toml游戏脚本</font>
   - `aah-gui`：
     - @唐博文 优化页面，添加Copilot页面的滚动条
-    - @田佳文 编写toml游戏脚本
 
+## Git graph
 
+### azur-arknights-helper
 
+Github 仓库：https://github.com/AzurIce/azur-arknights-helper
 
+![image-20240708203112966](./assets/image-20240708203112966.png)
+
+### aah-ai
+
+Github 仓库：https://github.com/AzurIce/aah-ai
+
+![image-20240708203155706](./assets/image-20240708203155706.png)
+
+### aah-gui
+
+Github 仓库：https://github.com/AzurIce/aah-gui
+
+![image-20240708203236091](./assets/image-20240708203236091.png)
 
 
 
