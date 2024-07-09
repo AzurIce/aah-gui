@@ -297,9 +297,13 @@ yolov8n，输入是 16:9 的图片缩放到 640x640
 
 ### 1.设备连接与断开
 
+<img src="./assets/image-20240709125544404.png" alt="image-20240709125544404" style="zoom:50%;" />
+
 用户可以输入序列号点击“建立连接”按钮连接对应的设备，同时也可以随时通过点击“断开连接”按钮断开连接。通过调用后端的 connect 和 disconnected 函数实现建立连接和断开连接。
 
 ### 2.Main Page
+
+<img src="./assets/1de48e287db9b09863e16e9ea7dce66.png" alt="1de48e287db9b09863e16e9ea7dce66" style="zoom:50%;" />
 
 Main Page 部分包括获取屏幕画面、可执行任务列表、执行任务、显示任务执行情况、分析部署等功能。
 
@@ -315,11 +319,15 @@ Main Page 部分包括获取屏幕画面、可执行任务列表、执行任务�
 
 ### 3.Battle Page
 
+<img src="/assets/4d6bd6bdc93e2f3a48a7a3ba1ab291c.png" alt="4d6bd6bdc93e2f3a48a7a3ba1ab291c" style="zoom:50%;" />
+
 Battle Page 部分包括获取当前战斗状态和干员相关状态。
 
 **获取战斗状态和干员状态**：这一部分功能的完成同样利用了Tauri中的event特性，当用户进入了一局战斗时，点击前端的“ROCK AND ROLL”按钮，就可以将当前的战斗状态以及这场战斗中所有干员的位置信息、是否可用信息等返回到前端，前端就会在对应的地方显示这些信息，这些信息也是在任务回调函数中被emit到前端的。
 
 ### 4.Copilot Page
+
+<img src="./assets/3c5418bb666741440977afa3e2a09ce.png" alt="3c5418bb666741440977afa3e2a09ce" style="zoom:50%;" />
 
 Copilot Page 部分包括可执行 Copilot 列表，执行 Copilot，显示 Copilot 的执行情况。
 
